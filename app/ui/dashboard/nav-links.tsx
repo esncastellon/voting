@@ -14,7 +14,7 @@ import clsx from "clsx";
 const links = [
   { name: "Home", href: "/dashboard", icon: HomeIcon },
   {
-    name: "Encuestas",
+    name: "Votaciones",
     href: "/dashboard/polls",
     icon: DocumentDuplicateIcon,
   },
