@@ -2,7 +2,7 @@ import { lato } from "@/app/ui/fonts";
 import { fetchCustomersPages } from "@/app/lib/data";
 import { Metadata } from "next";
 import { CreateUser } from "@/app/ui/users/buttons";
-import Pagination from "@/app/ui/surveys/pagination";
+import Pagination from "@/app/ui/commons/pagination";
 import Table from "@/app/ui/users/table";
 import Search from "@/app/ui/search";
 import { UsersTableSkeleton } from "@/app/ui/skeletons";
