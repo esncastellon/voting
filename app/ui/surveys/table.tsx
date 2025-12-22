@@ -1,8 +1,8 @@
 import Image from "next/image";
-import { UpdatePoll, DeletePoll } from "@/app/ui/invoices/buttons";
-import InvoiceStatus from "@/app/ui/invoices/status";
+import { UpdatePoll, DeletePoll } from "@/app/ui/surveys/buttons";
+import InvoiceStatus from "@/app/ui/surveys/status";
 import { formatDateToLocal, formatCurrency } from "@/app/lib/utils";
-import { fetchFilteredInvoices } from "@/app/lib/data";
+import { fetchFilteredSurveys } from "@/app/lib/data";
 
 export default async function InvoicesTable({
   query,
@@ -11,7 +11,7 @@ export default async function InvoicesTable({
   query: string;
   currentPage: number;
 }) {
-  const invoices = await fetchFilteredInvoices(query, currentPage);
+  const invoices = await fetchFilteredSurveys(query, currentPage);
 
   return (
     <div className="mt-6 flow-root">
@@ -35,16 +35,16 @@ export default async function InvoicesTable({
                       />
                       <p>{invoice.name}</p>
                     </div>
-                    <p className="text-sm text-gray-500">{invoice.email}</p>
+                    <p className="text-sm text-gray-500">{invoice.title}</p>
                   </div>
-                  <InvoiceStatus status={invoice.status} />
+                  {/*<InvoiceStatus status={invoice.status} />*/}
                 </div>
                 <div className="flex w-full items-center justify-between pt-4">
                   <div>
-                    <p className="text-xl font-medium">
+                    {/* <p className="text-xl font-medium">
                       {formatCurrency(invoice.amount)}
-                    </p>
-                    <p>{formatDateToLocal(invoice.date)}</p>
+                    </p>*/}
+                    <p>{formatDateToLocal(invoice.created_at)}</p>
                   </div>
                   <div className="flex justify-end gap-2">
                     <UpdatePoll id={invoice.id} />
@@ -58,13 +58,13 @@ export default async function InvoicesTable({
             <thead className="rounded-lg text-left text-sm font-normal">
               <tr>
                 <th scope="col" className="px-4 py-5 font-medium sm:pl-6">
-                  Customer
+                  Creado por
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
-                  Email
+                  Título
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
-                  Amount
+                  Creado el
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
                   Date
@@ -73,7 +73,7 @@ export default async function InvoicesTable({
                   Status
                 </th>
                 <th scope="col" className="relative py-3 pl-6 pr-3">
-                  <span className="sr-only">Edit</span>
+                  <span className="sr-only">Editar</span>
                 </th>
               </tr>
             </thead>
@@ -96,16 +96,10 @@ export default async function InvoicesTable({
                     </div>
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
-                    {invoice.email}
+                    {invoice.title}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
-                    {formatCurrency(invoice.amount)}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-3">
-                    {formatDateToLocal(invoice.date)}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-3">
-                    <InvoiceStatus status={invoice.status} />
+                    {formatDateToLocal(invoice.created_at)}
                   </td>
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex justify-end gap-3">

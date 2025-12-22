@@ -15,7 +15,7 @@ const links = [
   { name: "Home", href: "/dashboard", icon: HomeIcon },
   {
     name: "Votaciones",
-    href: "/dashboard/polls",
+    href: "/dashboard/surveys",
     icon: DocumentDuplicateIcon,
   },
   { name: "Usuarios", href: "/dashboard/users", icon: UserGroupIcon },

@@ -1,5 +1,5 @@
-import Form from "@/app/ui/invoices/create-form";
-import Breadcrumbs from "@/app/ui/invoices/breadcrumbs";
+import Form from "@/app/ui/surveys/create-form";
+import Breadcrumbs from "@/app/ui/surveys/breadcrumbs";
 import { fetchCustomers } from "@/app/lib/data";
 import { Metadata } from "next";
 
@@ -14,10 +14,10 @@ export default async function Page() {
     <main>
       <Breadcrumbs
         breadcrumbs={[
-          { label: "Votaciones", href: "/dashboard/polls" },
+          { label: "Votaciones", href: "/dashboard/surveys" },
           {
             label: "Crear Votación",
-            href: "/dashboard/polls/create",
+            href: "/dashboard/surveys/create",
             active: true,
           },
         ]}

@@ -1,11 +1,11 @@
-import Pagination from "@/app/ui/invoices/pagination";
+import Pagination from "@/app/ui/surveys/pagination";
 import Search from "@/app/ui/search";
-import Table from "@/app/ui/invoices/table";
-import { CreatePoll } from "@/app/ui/invoices/buttons";
+import Table from "@/app/ui/surveys/table";
+import { CreatePoll } from "@/app/ui/surveys/buttons";
 import { lato } from "@/app/ui/fonts";
 import { InvoicesTableSkeleton } from "@/app/ui/skeletons";
 import { Suspense } from "react";
-import { fetchInvoicesPages } from "@/app/lib/data";
+import { fetchSurveysPages } from "@/app/lib/data";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -21,7 +21,7 @@ export default async function Page(props: {
   const searchParams = await props.searchParams;
   const query = searchParams?.query || "";
   const currentPage = Number(searchParams?.page) || 1;
-  const totalPages = await fetchInvoicesPages(query);
+  const totalPages = await fetchSurveysPages(query);
 
   return (
     <div className="w-full">
