@@ -6,6 +6,11 @@ import { lato } from "@/app/ui/fonts";
 import { InvoicesTableSkeleton } from "@/app/ui/skeletons";
 import { Suspense } from "react";
 import { fetchInvoicesPages } from "@/app/lib/data";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Votaciones",
+};
 
 export default async function Page(props: {
   searchParams?: Promise<{
