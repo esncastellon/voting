@@ -1,10 +1,7 @@
 import Image from "next/image";
 import { lato } from "@/app/ui/fonts";
 import Search from "@/app/ui/search";
-import {
-  CustomersTableType,
-  FormattedCustomersTable,
-} from "@/app/lib/definitions";
+import { UsersTableType, FormattedUsersTable } from "@/app/lib/definitions";
 import { fetchFilteredCustomers } from "@/app/lib/data";
 
 export default async function CustomersTable({
@@ -43,19 +40,6 @@ export default async function CustomersTable({
                       <p className="text-sm text-gray-500">{customer.email}</p>
                     </div>
                   </div>
-                  <div className="flex w-full items-center justify-between border-b py-5">
-                    <div className="flex w-1/2 flex-col">
-                      <p className="text-xs">Pending</p>
-                      <p className="font-medium">{customer.total_pending}</p>
-                    </div>
-                    <div className="flex w-1/2 flex-col">
-                      <p className="text-xs">Paid</p>
-                      <p className="font-medium">{customer.total_paid}</p>
-                    </div>
-                  </div>
-                  <div className="pt-4 text-sm">
-                    <p>{customer.total_invoices} invoices</p>
-                  </div>
                 </div>
               ))}
             </div>
@@ -69,13 +53,10 @@ export default async function CustomersTable({
                     Email
                   </th>
                   <th scope="col" className="px-3 py-5 font-medium">
-                    Total Invoices
+                    Role
                   </th>
                   <th scope="col" className="px-3 py-5 font-medium">
-                    Total Pending
-                  </th>
-                  <th scope="col" className="px-4 py-5 font-medium">
-                    Total Paid
+                    Status
                   </th>
                 </tr>
               </thead>
@@ -99,13 +80,7 @@ export default async function CustomersTable({
                       {customer.email}
                     </td>
                     <td className="whitespace-nowrap bg-white px-4 py-5 text-sm">
-                      {customer.total_invoices}
-                    </td>
-                    <td className="whitespace-nowrap bg-white px-4 py-5 text-sm">
-                      {customer.total_pending}
-                    </td>
-                    <td className="whitespace-nowrap bg-white px-4 py-5 text-sm group-first-of-type:rounded-md group-last-of-type:rounded-md">
-                      {customer.total_paid}
+                      {customer.role}
                     </td>
                   </tr>
                 ))}
