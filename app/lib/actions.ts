@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import postgres from "postgres";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
+import { CreateUser } from "../ui/users/buttons";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
@@ -39,7 +40,6 @@ export type State = {
 export async function createPoll(prevState: State, formData: FormData) {
   const validatedFields = CreatePoll.safeParse({
     customerId: formData.get("customerId"),
-    amount: formData.get("amount"),
     status: formData.get("status"),
   });
 
@@ -50,13 +50,12 @@ export async function createPoll(prevState: State, formData: FormData) {
     };
   }
 
-  const { customerId, amount, status } = validatedFields.data;
-  const amountInCents = amount * 100;
+  const { customerId, status } = validatedFields.data;
   const date = new Date().toISOString().split("T")[0];
   try {
     await sql`
-    INSERT INTO invoices (customer_id, amount, status, date)
-    VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
+    INSERT INTO polls (customer_id, status, date)
+    VALUES (${customerId}, ${status}, ${date})
   `;
   } catch (error) {
     console.error(error);
@@ -65,8 +64,8 @@ export async function createPoll(prevState: State, formData: FormData) {
     };
   }
 
-  revalidatePath("/dashboard/polls");
-  redirect("/dashboard/polls");
+  revalidatePath("/dashboard/surveys");
+  redirect("/dashboard/surveys");
 }
 
 export async function updatePoll(
@@ -102,14 +101,14 @@ export async function updatePoll(
       message: "Database Error: Failed to Update Poll.",
     };
   }
-  revalidatePath("/dashboard/polls");
-  redirect("/dashboard/polls");
+  revalidatePath("/dashboard/surveys");
+  redirect("/dashboard/surveys");
 }
 
 export async function deletePoll(id: string) {
   throw new Error("Failed to Delete Poll");
   await sql`DELETE FROM invoices WHERE id = ${id}`;
-  revalidatePath("/dashboard/polls");
+  revalidatePath("/dashboard/surveys");
 }
 
 export async function authenticate(

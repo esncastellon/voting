@@ -1,6 +1,6 @@
-import Form from "@/app/ui/surveys/edit-form";
-import Breadcrumbs from "@/app/ui/surveys/breadcrumbs";
-import { fetchInvoiceById, fetchCustomers } from "@/app/lib/data";
+import Form from "@/app/ui/invoices/edit-form";
+import Breadcrumbs from "@/app/ui/commons/breadcrumbs";
+import { fetchInvoiceById, fetchUsers } from "@/app/lib/data";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 
@@ -11,10 +11,7 @@ export const metadata: Metadata = {
 export default async function Page(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const id = params.id;
-  const [poll, customers] = await Promise.all([
-    fetchInvoiceById(id),
-    fetchCustomers(),
-  ]);
+  const [poll, users] = await Promise.all([fetchInvoiceById(id), fetchUsers()]);
 
   if (!poll) {
     notFound();
@@ -32,7 +29,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
           },
         ]}
       />
-      <Form invoice={poll} customers={customers} />
+      {/* <Form invoice={poll} users={users} /> */}
     </main>
   );
 }

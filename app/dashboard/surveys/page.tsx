@@ -1,4 +1,4 @@
-import Pagination from "@/app/ui/surveys/pagination";
+import Pagination from "@/app/ui/commons/pagination";
 import Search from "@/app/ui/search";
 import Table from "@/app/ui/surveys/table";
 import { CreatePoll } from "@/app/ui/surveys/buttons";

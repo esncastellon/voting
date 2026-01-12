@@ -8,8 +8,8 @@ import {
   SurveysTable,
   UserField,
   UsersTableType,
-} from "./definitions";
-import { formatCurrency } from "./utils";
+} from "../definitions";
+import { formatCurrency } from "../utils";
 import { Role } from "firebase/ai";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
