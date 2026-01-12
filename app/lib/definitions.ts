@@ -31,17 +31,13 @@ export type Revenue = {
   revenue: number;
 };
 
-export type LatestInvoice = {
-  id: string;
-  name: string;
-  image_url: string;
-  email: string;
-  amount: string;
-};
-
 // The database returns a number for amount, but we later format it to a string with the formatCurrency function
-export type LatestInvoiceRaw = Omit<LatestInvoice, "amount"> & {
-  amount: number;
+export type LatestPollsRaw = {
+  id: string;
+  title: string;
+  description: string;
+  created_at: string;
+  created_by: string;
 };
 
 export type InvoicesTable = {
@@ -66,27 +62,23 @@ export type SurveysTable = {
   status: "pendiente" | "activa" | "cerrada";
 };
 
-export type CustomersTableType = {
+export type UsersTableType = {
   id: string;
   name: string;
   email: string;
   image_url: string;
-  total_invoices: number;
-  total_pending: number;
-  total_paid: number;
+  role: string;
 };
 
-export type FormattedCustomersTable = {
+export type FormattedUsersTable = {
   id: string;
   name: string;
   email: string;
   image_url: string;
-  total_invoices: number;
-  total_pending: string;
-  total_paid: string;
+  role: string;
 };
 
-export type CustomerField = {
+export type UserField = {
   id: string;
   name: string;
 };

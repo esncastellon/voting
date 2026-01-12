@@ -1,13 +1,13 @@
 import postgres from "postgres";
 import {
-  CustomerField,
-  CustomersTableType,
   InvoiceForm,
   InvoicesTable,
-  LatestInvoiceRaw,
+  LatestPollsRaw,
   Revenue,
   RoleField,
   SurveysTable,
+  UserField,
+  UsersTableType,
 } from "./definitions";
 import { formatCurrency } from "./utils";
 import { Role } from "firebase/ai";
@@ -33,23 +33,22 @@ export async function fetchRevenue() {
   }
 }
 
-export async function fetchLatestInvoices() {
+export async function fetchLatestPolls() {
   try {
-    const data = await sql<LatestInvoiceRaw[]>`
-      SELECT invoices.amount, customers.name, customers.image_url, customers.email, invoices.id
-      FROM invoices
-      JOIN customers ON invoices.customer_id = customers.id
-      ORDER BY invoices.date DESC
+    const data = await sql<LatestPollsRaw[]>`
+      SELECT polls.id, polls.title, polls.description, polls.created_at, polls.created_by
+      FROM polls
+      JOIN users ON polls.user_id = users.id
+      ORDER BY polls.date DESC
       LIMIT 5`;
 
-    const latestInvoices = data.map((invoice) => ({
-      ...invoice,
-      amount: formatCurrency(invoice.amount),
+    const latestPolls = data.map((poll) => ({
+      ...poll,
     }));
-    return latestInvoices;
+    return latestPolls;
   } catch (error) {
     console.error("Database Error:", error);
-    throw new Error("Failed to fetch the latest invoices.");
+    throw new Error("Failed to fetch the latest polls.");
   }
 }
 
@@ -219,26 +218,26 @@ export async function fetchInvoiceById(id: string) {
   }
 }
 
-export async function fetchCustomers() {
+export async function fetchUsers() {
   try {
-    const customers = await sql<CustomerField[]>`
+    const users = await sql<UserField[]>`
       SELECT
         id,
         name
-      FROM customers
+      FROM users
       ORDER BY name ASC
     `;
 
-    return customers;
+    return users;
   } catch (err) {
     console.error("Database Error:", err);
-    throw new Error("Failed to fetch all customers.");
+    throw new Error("Failed to fetch all users.");
   }
 }
 
 export async function fetchRoles() {
   try {
-    const customers = await sql<RoleField[]>`
+    const roles = await sql<RoleField[]>`
       SELECT
         id,
         name
@@ -246,10 +245,10 @@ export async function fetchRoles() {
       ORDER BY name ASC
     `;
 
-    return customers;
+    return roles;
   } catch (err) {
     console.error("Database Error:", err);
-    throw new Error("Failed to fetch all customers.");
+    throw new Error("Failed to fetch all roles.");
   }
 }
 
@@ -259,29 +258,25 @@ export async function fetchFilteredCustomers(
 ) {
   try {
     const offset = (currentPage - 1) * ITEMS_PER_PAGE;
-    const data = await sql<CustomersTableType[]>`
+    const data = await sql<UsersTableType[]>`
 		SELECT
-		  customers.id,
-		  customers.name,
-		  customers.email,
-		  customers.image_url,
-		  COUNT(invoices.id) AS total_invoices,
-		  SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending,
-		  SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
-		FROM customers
-		LEFT JOIN invoices ON customers.id = invoices.customer_id
+		  users.id,
+		  users.name,
+		  users.email,
+		  users.image_url,
+		  roles.name AS role
+		FROM users
+		JOIN roles ON users.role_id = roles.id
 		WHERE
-		  customers.name ILIKE ${`%${query}%`} OR
-        customers.email ILIKE ${`%${query}%`}
-		GROUP BY customers.id, customers.name, customers.email, customers.image_url
-		ORDER BY customers.name ASC
+		  users.name ILIKE ${`%${query}%`} OR
+        users.email ILIKE ${`%${query}%`}
+		GROUP BY users.id, users.name, users.email, users.image_url, roles.name
+		ORDER BY users.name ASC
     LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
 	  `;
 
     const customers = data.map((customer) => ({
       ...customer,
-      total_pending: formatCurrency(customer.total_pending),
-      total_paid: formatCurrency(customer.total_paid),
     }));
 
     return customers;
@@ -295,13 +290,12 @@ export async function fetchCustomersPages(query: string) {
   try {
     const data = await sql`
 		SELECT COUNT(*) 
-    FROM customers
-		LEFT JOIN invoices ON customers.id = invoices.customer_id
+    FROM users
 		WHERE
-		  customers.name ILIKE ${`%${query}%`} OR
-        customers.email ILIKE ${`%${query}%`}
-		GROUP BY customers.id, customers.name, customers.email, customers.image_url
-		ORDER BY customers.name ASC
+		  users.name ILIKE ${`%${query}%`} OR
+        users.email ILIKE ${`%${query}%`}
+		GROUP BY users.id, users.name, users.email, users.image_url
+		ORDER BY users.name ASC
 	  `;
 
     const totalPages = Math.ceil(Number(data[0].count) / ITEMS_PER_PAGE);
