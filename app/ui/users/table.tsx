@@ -2,7 +2,7 @@ import Image from "next/image";
 import { lato } from "@/app/ui/fonts";
 import Search from "@/app/ui/search";
 import { UsersTableType, FormattedUsersTable } from "@/app/lib/definitions";
-import { fetchFilteredCustomers } from "@/app/lib/data";
+import { fetchFilteredCustomers } from "@/app/lib/user/data";
 
 export default async function CustomersTable({
   query,
