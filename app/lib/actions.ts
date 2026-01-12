@@ -65,8 +65,42 @@ export async function createPoll(prevState: State, formData: FormData) {
     };
   }
 
-  revalidatePath("/dashboard/polls");
-  redirect("/dashboard/polls");
+  revalidatePath("/dashboard/surveys");
+  redirect("/dashboard/surveys");
+}
+
+export async function createUser(prevState: State, formData: FormData) {
+  const validatedFields = CreatePoll.safeParse({
+    name: formData.get("name"),
+    email: formData.get("email"),
+    password: formData.get("password"),
+    roleId: formData.get("roleId"),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "Missing Fields. Failed to Create Poll.",
+    };
+  }
+
+  const { customerId, amount, status } = validatedFields.data;
+  const amountInCents = amount * 100;
+  const date = new Date().toISOString().split("T")[0];
+  try {
+    await sql`
+    INSERT INTO invoices (customer_id, amount, status, date)
+    VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
+  `;
+  } catch (error) {
+    console.error(error);
+    return {
+      message: "Database Error: Failed to Create Poll.",
+    };
+  }
+
+  revalidatePath("/dashboard/surveys");
+  redirect("/dashboard/surveys");
 }
 
 export async function updatePoll(
@@ -102,14 +136,14 @@ export async function updatePoll(
       message: "Database Error: Failed to Update Poll.",
     };
   }
-  revalidatePath("/dashboard/polls");
-  redirect("/dashboard/polls");
+  revalidatePath("/dashboard/surveys");
+  redirect("/dashboard/surveys");
 }
 
 export async function deletePoll(id: string) {
   throw new Error("Failed to Delete Poll");
   await sql`DELETE FROM invoices WHERE id = ${id}`;
-  revalidatePath("/dashboard/polls");
+  revalidatePath("/dashboard/surveys");
 }
 
 export async function authenticate(
