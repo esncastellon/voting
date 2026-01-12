@@ -1,6 +1,6 @@
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { deletePoll } from "@/app/lib/actions";
+import { deletePoll } from "@/app/lib/survey/actions";
 
 export function CreatePoll() {
   return (

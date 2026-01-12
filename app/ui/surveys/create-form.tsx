@@ -1,118 +1,144 @@
 "use client";
 
-import { CustomerField } from "@/app/lib/definitions";
+import { RoleField } from "@/app/lib/survey/definitions";
 import Link from "next/link";
 import {
-  CheckIcon,
-  ClockIcon,
-  CurrencyDollarIcon,
+  HashtagIcon,
+  LanguageIcon,
+  CalendarIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import { Button } from "@/app/ui/button";
-import { createPoll, State } from "@/app/lib/actions";
+import { createPoll, State } from "@/app/lib/survey/actions";
 import { useActionState } from "react";
+import Input from "../input";
+import TextInput from "../text-input";
+import { UserField } from "@/app/lib/user/definitions";
 
-export default function Form({ customers }: { customers: CustomerField[] }) {
+export default function Form({
+  roles,
+  users,
+}: {
+  roles: RoleField[];
+  users: UserField[];
+}) {
   const initialState: State = { message: null, errors: {} };
   const [state, formAction] = useActionState(createPoll, initialState);
   return (
     <form action={formAction}>
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
-        {/* Customer Name */}
-        <div className="mb-4">
-          <label htmlFor="customer" className="mb-2 block text-sm font-medium">
-            Choose customer
-          </label>
-          <div className="relative">
-            <select
-              id="customer"
-              name="customerId"
-              className="peer block w-full cursor-pointer rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
-              defaultValue=""
-              aria-describedby="customer-error"
-            >
-              <option value="" disabled>
-                Select a customer
+        {/* Title */}
+        <Input
+          id="title"
+          label="Título de la votación"
+          icon={
+            <HashtagIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+          }
+        >
+          <TextInput
+            id="title"
+            name="title"
+            type="text"
+            placeholder="Introduce el título de la votación"
+          />
+        </Input>
+
+        {/* Description */}
+        <Input
+          id="description"
+          label="Descripción de la votación"
+          icon={
+            <LanguageIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+          }
+        >
+          <TextInput
+            id="description"
+            name="description"
+            type="text"
+            placeholder="Introduce la descripción de la votación"
+          />
+        </Input>
+
+        {/* Start Date */}
+        <Input
+          id="startDate"
+          label="Fecha de inicio"
+          icon={
+            <CalendarIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+          }
+        >
+          <TextInput
+            id="startDate"
+            name="startDate"
+            type="date"
+            placeholder="Introduce la fecha de inicio"
+            value={new Date().toISOString().split("T")[0]}
+          />
+        </Input>
+
+        {/* End Date */}
+        <Input
+          id="endDate"
+          label="Fecha de finalización"
+          icon={
+            <CalendarIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+          }
+        >
+          <TextInput
+            id="endDate"
+            name="endDate"
+            type="date"
+            placeholder="Introduce la fecha de finalización"
+          />
+        </Input>
+
+        {/* Recipients */}
+        <Input
+          id="recipients"
+          label="Selecciona los destinatarios"
+          icon={
+            <UserCircleIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+          }
+        >
+          <select
+            id="roleId"
+            name="roleId"
+            className="peer block w-full cursor-pointer rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+            defaultValue=""
+            aria-describedby="role-error"
+            multiple
+          >
+            <option value="" disabled>
+              Selecciona roles y/o usuarios
+            </option>
+            {roles.map((role) => (
+              <option key={role.id} value={role.id}>
+                {role.name}
               </option>
-              {customers.map((customer) => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.name}
-                </option>
-              ))}
-            </select>
-            <UserCircleIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
-          </div>
-          <div id="customer-error" aria-live="polite" aria-atomic="true">
-            {state.errors?.customerId &&
-              state.errors.customerId.map((error: string) => (
+            ))}
+            {users.map((user) => (
+              <option key={user.id} value={user.id}>
+                {user.name}
+              </option>
+            ))}
+          </select>
+          <div id="role-error" aria-live="polite" aria-atomic="true">
+            {state.errors?.title &&
+              state.errors.title.map((error: string) => (
                 <p className="mt-2 text-sm text-red-500" key={error}>
                   {error}
                 </p>
               ))}
           </div>
+        </Input>
+        <div id="customer-error" aria-live="polite" aria-atomic="true">
+          {state.errors?.recipients &&
+            state.errors.recipients.map((error: string) => (
+              <p className="mt-2 text-sm text-red-500" key={error}>
+                {error}
+              </p>
+            ))}
         </div>
-
-        {/* Invoice Amount */}
-        <div className="mb-4">
-          <label htmlFor="amount" className="mb-2 block text-sm font-medium">
-            Choose an amount
-          </label>
-          <div className="relative mt-2 rounded-md">
-            <div className="relative">
-              <input
-                id="amount"
-                name="amount"
-                type="number"
-                step="0.01"
-                placeholder="Enter USD amount"
-                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
-                required
-              />
-              <CurrencyDollarIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
-            </div>
-          </div>
-        </div>
-
-        {/* Invoice Status */}
-        <fieldset>
-          <legend className="mb-2 block text-sm font-medium">
-            Set the invoice status
-          </legend>
-          <div className="rounded-md border border-gray-200 bg-white px-[14px] py-3">
-            <div className="flex gap-4">
-              <div className="flex items-center">
-                <input
-                  id="pending"
-                  name="status"
-                  type="radio"
-                  value="pending"
-                  className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
-                />
-                <label
-                  htmlFor="pending"
-                  className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600"
-                >
-                  Pending <ClockIcon className="h-4 w-4" />
-                </label>
-              </div>
-              <div className="flex items-center">
-                <input
-                  id="paid"
-                  name="status"
-                  type="radio"
-                  value="paid"
-                  className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
-                />
-                <label
-                  htmlFor="paid"
-                  className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-green-500 px-3 py-1.5 text-xs font-medium text-white"
-                >
-                  Paid <CheckIcon className="h-4 w-4" />
-                </label>
-              </div>
-            </div>
-          </div>
-        </fieldset>
       </div>
       <div className="mt-6 flex justify-end gap-4">
         <Link

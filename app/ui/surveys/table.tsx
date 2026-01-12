@@ -1,8 +1,8 @@
 import Image from "next/image";
 import { UpdatePoll, DeletePoll } from "@/app/ui/surveys/buttons";
 import InvoiceStatus from "@/app/ui/surveys/status";
-import { formatDateToLocal, formatCurrency } from "@/app/lib/utils";
-import { fetchFilteredSurveys } from "@/app/lib/data";
+import { formatDateToLocal, formatCurrency } from "@/app/lib/survey/utils";
+import { fetchFilteredSurveys } from "@/app/lib/survey/data";
 
 export default async function InvoicesTable({
   query,

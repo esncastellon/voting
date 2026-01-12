@@ -5,7 +5,7 @@ import { CreatePoll } from "@/app/ui/surveys/buttons";
 import { lato } from "@/app/ui/fonts";
 import { InvoicesTableSkeleton } from "@/app/ui/skeletons";
 import { Suspense } from "react";
-import { fetchSurveysPages } from "@/app/lib/data";
+import { fetchSurveysPages } from "@/app/lib/survey/data";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {

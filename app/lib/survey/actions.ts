@@ -6,41 +6,39 @@ import { redirect } from "next/navigation";
 import postgres from "postgres";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
-import { CreateUser } from "../ui/users/buttons";
-
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
 const FormSchema = z.object({
   id: z.string(),
-  customerId: z.string({
-    invalid_type_error: "Please select a customer.",
-  }),
-  amount: z.coerce
-    .number()
-    .gt(0, { message: "Please enter an amount greater than $0." }),
-  status: z.enum(["pending", "paid"], {
-    invalid_type_error: "Please select an invoice status.",
-  }),
-  date: z.string(),
+  title: z.string(),
+  description: z.string(),
+  startDate: z.string(),
+  endDate: z.string(),
+  recipients: z.string().array().optional(),
 });
 
-const CreatePoll = FormSchema.omit({ id: true, date: true });
+const CreatePoll = FormSchema.omit({ id: true });
 
-const UpdatePoll = FormSchema.omit({ id: true, date: true });
+const UpdatePoll = FormSchema.omit({ id: true });
 
 export type State = {
   errors?: {
-    customerId?: string[];
-    amount?: string[];
-    status?: string[];
+    title?: string[];
+    description?: string[];
+    startDate?: string[];
+    endDate?: string[];
+    recipients?: string[];
   };
   message?: string | null;
 };
 
 export async function createPoll(prevState: State, formData: FormData) {
   const validatedFields = CreatePoll.safeParse({
-    customerId: formData.get("customerId"),
-    status: formData.get("status"),
+    title: formData.get("title"),
+    description: formData.get("description"),
+    startDate: formData.get("startDate"),
+    endDate: formData.get("endDate"),
+    recipients: formData.get("recipients"),
   });
 
   if (!validatedFields.success) {
@@ -50,12 +48,13 @@ export async function createPoll(prevState: State, formData: FormData) {
     };
   }
 
-  const { customerId, status } = validatedFields.data;
+  const { title, description, startDate, endDate, recipients } =
+    validatedFields.data;
   const date = new Date().toISOString().split("T")[0];
   try {
     await sql`
-    INSERT INTO polls (customer_id, status, date)
-    VALUES (${customerId}, ${status}, ${date})
+    INSERT INTO polls (title, description, start_date, end_date, created_at, created_by, status)
+    VALUES (${title}, ${description}, ${startDate}, ${endDate}, now(), 'admin', 'activa')
   `;
   } catch (error) {
     console.error(error);
@@ -74,9 +73,11 @@ export async function updatePoll(
   formData: FormData
 ) {
   const validatedFields = UpdatePoll.safeParse({
-    customerId: formData.get("customerId"),
-    amount: formData.get("amount"),
-    status: formData.get("status"),
+    title: formData.get("title"),
+    description: formData.get("description"),
+    startDate: formData.get("startDate"),
+    endDate: formData.get("endDate"),
+    recipients: formData.get("recipients"),
   });
 
   if (!validatedFields.success) {
@@ -86,13 +87,13 @@ export async function updatePoll(
     };
   }
 
-  const { customerId, amount, status } = validatedFields.data;
-  const amountInCents = amount * 100;
+  const { title, description, startDate, endDate, recipients } =
+    validatedFields.data;
 
   try {
     await sql`
-    UPDATE invoices
-    SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
+    UPDATE polls
+    SET title = ${title}, description = ${description}, start_date = ${startDate}, end_date = ${endDate}, status = 'activa'
     WHERE id = ${id}
   `;
   } catch (error) {
@@ -106,8 +107,7 @@ export async function updatePoll(
 }
 
 export async function deletePoll(id: string) {
-  throw new Error("Failed to Delete Poll");
-  await sql`DELETE FROM invoices WHERE id = ${id}`;
+  await sql`DELETE FROM polls WHERE id = ${id}`;
   revalidatePath("/dashboard/surveys");
 }
 
