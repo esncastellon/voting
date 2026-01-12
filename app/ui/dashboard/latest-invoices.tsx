@@ -2,8 +2,8 @@ import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import Image from "next/image";
 import { lato } from "@/app/ui/fonts";
-import { LatestPollsRaw } from "@/app/lib/definitions";
-import { fetchLatestPolls } from "@/app/lib/data";
+import { LatestPollsRaw } from "@/app/lib/survey/definitions";
+import { fetchLatestPolls } from "@/app/lib/survey/data";
 
 export default async function LatestInvoices() {
   // Remove props
