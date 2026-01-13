@@ -4,14 +4,16 @@ export default function TextInput({
   type,
   placeholder,
   required = true,
-  value = "",
+  defaultValue,
+  onChange,
 }: {
   id: string;
   name: string;
   type: string;
   placeholder: string;
   required?: boolean;
-  value?: string;
+  defaultValue?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }) {
   return (
     <input
@@ -21,7 +23,8 @@ export default function TextInput({
       placeholder={placeholder}
       className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
       required={required}
-      value={value}
+      defaultValue={defaultValue}
+      onChange={onChange}
     />
   );
 }
