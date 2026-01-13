@@ -1,7 +1,7 @@
-import { generateYAxis } from "@/app/lib/survey/utils";
+/*import { generateYAxis } from "@/app/lib/survey/utils";
 import { CalendarIcon } from "@heroicons/react/24/outline";
 import { lato } from "@/app/ui/fonts";
-import { fetchRevenue } from "@/app/lib/survey/data";
+import { fetchFilteredSurveys } from "@/app/lib/survey/data";
 
 // This component is representational only.
 // For data visualization UI, check out:
@@ -11,7 +11,7 @@ import { fetchRevenue } from "@/app/lib/survey/data";
 
 export default async function RevenueChart() {
   // Make component async, remove the props
-  const revenue = await fetchRevenue();
+  const revenue = await fetchFilteredSurveys();
   const chartHeight = 350;
 
   const { yAxisLabels, topLabel } = generateYAxis(revenue);
@@ -59,3 +59,4 @@ export default async function RevenueChart() {
     </div>
   );
 }
+*/

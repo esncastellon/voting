@@ -2,34 +2,6 @@
 // It describes the shape of the data, and what data type each property should accept.
 // For simplicity of teaching, we're manually defining these types.
 // However, these types are generated automatically if you're using an ORM such as Prisma.
-export type User = {
-  id: string;
-  name: string;
-  email: string;
-  password: string;
-};
-
-export type Customer = {
-  id: string;
-  name: string;
-  email: string;
-  image_url: string;
-};
-
-export type Invoice = {
-  id: string;
-  customer_id: string;
-  amount: number;
-  date: string;
-  // In TypeScript, this is called a string union type.
-  // It means that the "status" property can only be one of the two strings: 'pending' or 'paid'.
-  status: "pending" | "paid";
-};
-
-export type Revenue = {
-  month: string;
-  revenue: number;
-};
 
 // The database returns a number for amount, but we later format it to a string with the formatCurrency function
 export type LatestPollsRaw = {
@@ -38,17 +10,6 @@ export type LatestPollsRaw = {
   description: string;
   created_at: string;
   created_by: string;
-};
-
-export type InvoicesTable = {
-  id: string;
-  customer_id: string;
-  name: string;
-  email: string;
-  image_url: string;
-  date: string;
-  amount: number;
-  status: "pending" | "paid";
 };
 
 export type SurveysTable = {
@@ -62,35 +23,19 @@ export type SurveysTable = {
   status: "pendiente" | "activa" | "cerrada";
 };
 
-export type UsersTableType = {
-  id: string;
-  name: string;
-  email: string;
-  image_url: string;
-  role: string;
+export type SurveyField = {
+  id?: string;
+  title: string;
+  description: string;
+  created_at: string;
+  created_by: string;
+  questions: QuestionField[];
 };
 
-export type FormattedUsersTable = {
-  id: string;
-  name: string;
-  email: string;
-  image_url: string;
-  role: string;
-};
-
-export type UserField = {
-  id: string;
-  name: string;
-};
-
-export type RoleField = {
-  id: string;
-  name: string;
-};
-
-export type InvoiceForm = {
-  id: string;
-  customer_id: string;
-  amount: number;
-  status: "pending" | "paid";
+export type QuestionField = {
+  id?: string;
+  title: string;
+  description: string;
+  type: "single" | "multiple";
+  options: string[];
 };

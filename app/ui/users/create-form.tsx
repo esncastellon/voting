@@ -1,6 +1,6 @@
 "use client";
 
-import { RoleField } from "@/app/lib/survey/definitions";
+import { RoleField } from "@/app/lib/user/definitions";
 import Link from "next/link";
 import {
   UserCircleIcon,
