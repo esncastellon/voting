@@ -7,7 +7,11 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@heroicons/react": "^2.2.0",
+    "@mui/icons-material": "^7.3.7",
+    "@mui/material": "^7.3.7",
     "@tailwindcss/forms": "^0.5.10",
     "autoprefixer": "10.4.20",
     "bcrypt": "^5.1.1",
@@ -35,6 +39,9 @@
     "onlyBuiltDependencies": [
       "bcrypt",
       "sharp"
+    ],
+    "ignoredBuiltDependencies": [
+      "unrs-resolver"
     ]
   }
 }
