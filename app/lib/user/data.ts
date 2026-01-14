@@ -1,14 +1,5 @@
 import postgres from "postgres";
-import {
-  InvoiceForm,
-  InvoicesTable,
-  LatestPollsRaw,
-  Revenue,
-  RoleField,
-  SurveysTable,
-  UserField,
-  UsersTableType,
-} from "../user/definitions";
+import { RoleField, UserField, UsersTableType } from "../user/definitions";
 import { Role } from "firebase/ai";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
@@ -100,5 +91,23 @@ export async function fetchCustomersPages(query: string) {
   } catch (err) {
     console.error("Database Error:", err);
     throw new Error("Failed to fetch total number of customers.");
+  }
+}
+
+export async function fetchUsersByRole(roleId: string) {
+  try {
+    const users = await sql<UserField[]>`
+      SELECT
+        id,
+        name
+      FROM users
+      WHERE role_id = ${roleId}
+      ORDER BY name ASC
+    `;
+
+    return users;
+  } catch (err) {
+    console.error("Database Error:", err);
+    throw new Error("Failed to fetch users by role.");
   }
 }

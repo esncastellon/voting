@@ -7,6 +7,7 @@ import postgres from "postgres";
 import { signIn, auth, getUser } from "@/auth";
 import { AuthError } from "next-auth";
 import { QuestionField, SurveyField } from "./definitions";
+import { fetchUsersByRole } from "../user/data";
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
 const FormSchema = z.object({
@@ -65,9 +66,7 @@ export async function createSurvey(
   const raw = formData.get("survey") as string;
   const survey: SurveyField = JSON.parse(raw);
 
-  console.log(survey);
   const validatedFields = CreateSurvey.safeParse(survey);
-  console.log(validatedFields);
 
   if (!validatedFields.success) {
     return {
@@ -77,10 +76,8 @@ export async function createSurvey(
 
   try {
     const session = await auth();
-    console.log(session?.user);
     if (session?.user) {
       const user = await getUser(session.user.email!);
-      console.log(user);
       if (!user) {
         return {
           message: "Unauthorized. Please log in.",
@@ -144,10 +141,13 @@ export async function createSurveysUsers(
 ) {
   try {
     for (const recipient of recipients) {
-      await sql`
-        INSERT INTO surveys_users (survey_id, user_id)
-        VALUES (${surveyId}, ${recipient})
-      `;
+      const users = await fetchUsersByRole(recipient);
+      for (const user of users) {
+        await sql`
+          INSERT INTO surveys_users (survey_id, user_id)
+          VALUES (${surveyId}, ${user.id})
+        `;
+      }
     }
   } catch (error) {
     console.error("Database Error:", error);
