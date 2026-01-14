@@ -1,8 +1,8 @@
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { deletePoll } from "@/app/lib/survey/actions";
+import { deleteSurvey } from "@/app/lib/survey/actions";
 
-export function CreatePoll() {
+export function CreateSurvey() {
   return (
     <Link
       href="/dashboard/surveys/create"
@@ -14,7 +14,7 @@ export function CreatePoll() {
   );
 }
 
-export function UpdatePoll({ id }: { id: string }) {
+export function UpdateSurvey({ id }: { id: string }) {
   return (
     <Link
       href={`/dashboard/surveys/${id}/edit`}
@@ -25,11 +25,11 @@ export function UpdatePoll({ id }: { id: string }) {
   );
 }
 
-export function DeletePoll({ id }: { id: string }) {
-  const deletePollWithId = deletePoll.bind(null, id);
+export function DeleteSurvey({ id }: { id: string }) {
+  const deleteSurveyWithId = deleteSurvey.bind(null, id);
 
   return (
-    <form action={deletePollWithId}>
+    <form action={deleteSurveyWithId}>
       <button type="submit" className="rounded-md border p-2 hover:bg-gray-100">
         <span className="sr-only">Delete</span>
         <TrashIcon className="w-4" />

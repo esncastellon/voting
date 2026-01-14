@@ -1,6 +1,6 @@
 "use client";
 
-import { createPoll, State } from "@/app/lib/survey/actions";
+import { createSurvey, State } from "@/app/lib/survey/actions";
 import { useActionState } from "react";
 import React from "react";
 import SurveyQuestions from "./survey-questions";
@@ -9,7 +9,6 @@ import { QuestionField } from "@/app/lib/survey/definitions";
 
 export default function GeneralInfo({}: {}) {
   const initialState: State = { message: null, errors: {} };
-  const [state, formAction] = useActionState(createPoll, initialState);
   const [survey, setSurvey] = React.useState({
     title: "",
     description: "",

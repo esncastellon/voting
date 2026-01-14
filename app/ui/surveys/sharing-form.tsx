@@ -2,7 +2,7 @@
 
 import { RoleField } from "@/app/lib/user/definitions";
 import { CalendarIcon } from "@heroicons/react/24/outline";
-import { createPoll, State } from "@/app/lib/survey/actions";
+import { createSurvey, State } from "@/app/lib/survey/actions";
 import { useActionState } from "react";
 import Input from "../input";
 import TextInput from "../text-input";
@@ -36,7 +36,7 @@ export default function SharingForm({
   users: UserField[];
 }) {
   const initialState: State = { message: null, errors: {} };
-  const [state, formAction] = useActionState(createPoll, initialState);
+  const [state, formAction] = useActionState(createSurvey, initialState);
   const [recipients, setRecipients] = React.useState<string[]>([]);
 
   const handleRecipientsChange = (

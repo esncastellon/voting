@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { UpdatePoll, DeletePoll } from "@/app/ui/surveys/buttons";
+import { UpdateSurvey, DeleteSurvey } from "@/app/ui/surveys/buttons";
 import InvoiceStatus from "@/app/ui/surveys/status";
 import { formatDateToLocal, formatCurrency } from "@/app/lib/survey/utils";
 import { fetchFilteredSurveys } from "@/app/lib/survey/data";
@@ -47,8 +47,8 @@ export default async function InvoicesTable({
                     <p>{formatDateToLocal(invoice.created_at)}</p>
                   </div>
                   <div className="flex justify-end gap-2">
-                    <UpdatePoll id={invoice.id} />
-                    <DeletePoll id={invoice.id} />
+                    <UpdateSurvey id={invoice.id} />
+                    <DeleteSurvey id={invoice.id} />
                   </div>
                 </div>
               </div>
@@ -103,8 +103,8 @@ export default async function InvoicesTable({
                   </td>
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex justify-end gap-3">
-                      <UpdatePoll id={invoice.id} />
-                      <DeletePoll id={invoice.id} />
+                      <UpdateSurvey id={invoice.id} />
+                      <DeleteSurvey id={invoice.id} />
                     </div>
                   </td>
                 </tr>

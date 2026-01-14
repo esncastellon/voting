@@ -15,11 +15,12 @@ const FormSchema = z.object({
   startDate: z.string(),
   endDate: z.string(),
   recipients: z.string().array().optional(),
+  questions: z.array(z.any()).optional(),
 });
 
-const CreatePoll = FormSchema.omit({ id: true });
+const CreateSurvey = FormSchema.omit({ id: true });
 
-const UpdatePoll = FormSchema.omit({ id: true });
+const UpdateSurvey = FormSchema.omit({ id: true });
 
 export type State = {
   errors?: {
@@ -28,12 +29,13 @@ export type State = {
     startDate?: string[];
     endDate?: string[];
     recipients?: string[];
+    questions?: string[];
   };
   message?: string | null;
 };
 
-export async function createPoll(prevState: State, formData: FormData) {
-  const validatedFields = CreatePoll.safeParse({
+export async function createSurvey(prevState: State, formData: FormData) {
+  const validatedFields = CreateSurvey.safeParse({
     title: formData.get("title"),
     description: formData.get("description"),
     startDate: formData.get("startDate"),
@@ -44,7 +46,7 @@ export async function createPoll(prevState: State, formData: FormData) {
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
-      message: "Missing Fields. Failed to Create Poll.",
+      message: "Missing Fields. Failed to Create Survey.",
     };
   }
 
@@ -53,13 +55,13 @@ export async function createPoll(prevState: State, formData: FormData) {
   const date = new Date().toISOString().split("T")[0];
   try {
     await sql`
-    INSERT INTO polls (title, description, start_date, end_date, created_at, created_by, status)
+    INSERT INTO surveys (title, description, start_date, end_date, created_at, created_by, status)
     VALUES (${title}, ${description}, ${startDate}, ${endDate}, now(), 'admin', 'activa')
   `;
   } catch (error) {
     console.error(error);
     return {
-      message: "Database Error: Failed to Create Poll.",
+      message: "Database Error: Failed to Create Survey.",
     };
   }
 
@@ -67,12 +69,12 @@ export async function createPoll(prevState: State, formData: FormData) {
   redirect("/dashboard/surveys");
 }
 
-export async function updatePoll(
+export async function updateSurvey(
   id: string,
   prevState: State,
   formData: FormData
 ) {
-  const validatedFields = UpdatePoll.safeParse({
+  const validatedFields = UpdateSurvey.safeParse({
     title: formData.get("title"),
     description: formData.get("description"),
     startDate: formData.get("startDate"),
@@ -83,7 +85,7 @@ export async function updatePoll(
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
-      message: "Missing Fields. Failed to Update Poll.",
+      message: "Missing Fields. Failed to Update Survey.",
     };
   }
 
@@ -92,22 +94,22 @@ export async function updatePoll(
 
   try {
     await sql`
-    UPDATE polls
+    UPDATE surveys
     SET title = ${title}, description = ${description}, start_date = ${startDate}, end_date = ${endDate}, status = 'activa'
     WHERE id = ${id}
   `;
   } catch (error) {
     console.error(error);
     return {
-      message: "Database Error: Failed to Update Poll.",
+      message: "Database Error: Failed to Update Survey.",
     };
   }
   revalidatePath("/dashboard/surveys");
   redirect("/dashboard/surveys");
 }
 
-export async function deletePoll(id: string) {
-  await sql`DELETE FROM polls WHERE id = ${id}`;
+export async function deleteSurvey(id: string) {
+  await sql`DELETE FROM surveys WHERE id = ${id}`;
   revalidatePath("/dashboard/surveys");
 }
 
