@@ -1,6 +1,6 @@
 import Form from "@/app/ui/surveys/create-form";
 import Breadcrumbs from "@/app/ui/commons/breadcrumbs";
-import { fetchUsers, fetchRoles } from "@/app/lib/user/data";
+import { fetchRoles } from "@/app/lib/user/data";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -8,7 +8,6 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  const users = await fetchUsers();
   const roles = await fetchRoles();
 
   return (
@@ -23,7 +22,7 @@ export default async function Page() {
           },
         ]}
       />
-      <Form users={users} roles={roles} />
+      <Form roles={roles} />
     </main>
   );
 }

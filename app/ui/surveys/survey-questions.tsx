@@ -22,7 +22,11 @@ export default function SurveyQuestions({
         title: "",
         description: "",
         type: "single" as "single" | "multiple",
-        options: ["", ""],
+        options: [
+          { name: "", position: 0 },
+          { name: "", position: 1 },
+        ],
+        position: questions.length,
       },
     ]);
   const removeQuestion = (index: number) =>

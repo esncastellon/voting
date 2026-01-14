@@ -1,5 +1,4 @@
 import postgres from "postgres";
-import { RoleField, UsersTableType } from "../user/definitions";
 import { LatestPollsRaw, SurveysTable } from "./definitions";
 import { formatCurrency } from "./utils";
 
@@ -91,27 +90,6 @@ export async function fetchFilteredSurveys(query: string, currentPage: number) {
   }
 }
 
-export async function fetchInvoicesPages(query: string) {
-  try {
-    const data = await sql`SELECT COUNT(*)
-    FROM invoices
-    JOIN customers ON invoices.customer_id = customers.id
-    WHERE
-      customers.name ILIKE ${`%${query}%`} OR
-      customers.email ILIKE ${`%${query}%`} OR
-      invoices.amount::text ILIKE ${`%${query}%`} OR
-      invoices.date::text ILIKE ${`%${query}%`} OR
-      invoices.status ILIKE ${`%${query}%`}
-  `;
-
-    const totalPages = Math.ceil(Number(data[0].count) / ITEMS_PER_PAGE);
-    return totalPages;
-  } catch (error) {
-    console.error("Database Error:", error);
-    throw new Error("Failed to fetch total number of invoices.");
-  }
-}
-
 export async function fetchSurveysPages(query: string) {
   try {
     const data = await sql`SELECT COUNT(*)
@@ -128,76 +106,5 @@ export async function fetchSurveysPages(query: string) {
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to fetch total number of surveys.");
-  }
-}
-
-export async function fetchRoles() {
-  try {
-    const roles = await sql<RoleField[]>`
-      SELECT
-        id,
-        name
-      FROM roles
-      ORDER BY name ASC
-    `;
-
-    return roles;
-  } catch (err) {
-    console.error("Database Error:", err);
-    throw new Error("Failed to fetch all roles.");
-  }
-}
-
-export async function fetchFilteredCustomers(
-  query: string,
-  currentPage: number
-) {
-  try {
-    const offset = (currentPage - 1) * ITEMS_PER_PAGE;
-    const data = await sql<UsersTableType[]>`
-		SELECT
-		  users.id,
-		  users.name,
-		  users.email,
-		  users.image_url,
-		  roles.name AS role
-		FROM users
-		JOIN roles ON users.role_id = roles.id
-		WHERE
-		  users.name ILIKE ${`%${query}%`} OR
-        users.email ILIKE ${`%${query}%`}
-		GROUP BY users.id, users.name, users.email, users.image_url, roles.name
-		ORDER BY users.name ASC
-    LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
-	  `;
-
-    const customers = data.map((customer) => ({
-      ...customer,
-    }));
-
-    return customers;
-  } catch (err) {
-    console.error("Database Error:", err);
-    throw new Error("Failed to fetch customer table.");
-  }
-}
-
-export async function fetchCustomersPages(query: string) {
-  try {
-    const data = await sql`
-		SELECT COUNT(*) 
-    FROM users
-		WHERE
-		  users.name ILIKE ${`%${query}%`} OR
-        users.email ILIKE ${`%${query}%`}
-		GROUP BY users.id, users.name, users.email, users.image_url
-		ORDER BY users.name ASC
-	  `;
-
-    const totalPages = Math.ceil(Number(data[0].count) / ITEMS_PER_PAGE);
-    return totalPages;
-  } catch (err) {
-    console.error("Database Error:", err);
-    throw new Error("Failed to fetch total number of customers.");
   }
 }

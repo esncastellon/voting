@@ -4,18 +4,42 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import postgres from "postgres";
-import { signIn } from "@/auth";
+import { signIn, auth, getUser } from "@/auth";
 import { AuthError } from "next-auth";
+import { QuestionField, SurveyField } from "./definitions";
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
 const FormSchema = z.object({
   id: z.string(),
   title: z.string(),
   description: z.string(),
-  startDate: z.string(),
-  endDate: z.string(),
-  recipients: z.string().array().optional(),
-  questions: z.array(z.any()).optional(),
+  startDate: z.preprocess(
+    (val) => (val ? new Date(val as string) : null),
+    z.date().nullable()
+  ),
+  endDate: z.preprocess(
+    (val) => (val ? new Date(val as string) : null),
+    z.date().nullable()
+  ),
+  recipients: z.number().array().optional(),
+  questions: z
+    .array(
+      z.object({
+        id: z.string().optional(),
+        title: z.string(),
+        description: z.string().optional(),
+        type: z.enum(["single", "multiple"]),
+        options: z.array(
+          z.object({
+            id: z.string().optional(),
+            name: z.string(),
+            position: z.number(),
+          })
+        ),
+        position: z.number(),
+      })
+    )
+    .optional(),
 });
 
 const CreateSurvey = FormSchema.omit({ id: true });
@@ -29,35 +53,51 @@ export type State = {
     startDate?: string[];
     endDate?: string[];
     recipients?: string[];
-    questions?: string[];
+    questions?: QuestionField[];
   };
   message?: string | null;
 };
 
-export async function createSurvey(prevState: State, formData: FormData) {
-  const validatedFields = CreateSurvey.safeParse({
-    title: formData.get("title"),
-    description: formData.get("description"),
-    startDate: formData.get("startDate"),
-    endDate: formData.get("endDate"),
-    recipients: formData.get("recipients"),
-  });
+export async function createSurvey(
+  prevState: State,
+  formData: FormData
+): Promise<State> {
+  const raw = formData.get("survey") as string;
+  const survey: SurveyField = JSON.parse(raw);
+
+  console.log(survey);
+  const validatedFields = CreateSurvey.safeParse(survey);
+  console.log(validatedFields);
 
   if (!validatedFields.success) {
     return {
-      errors: validatedFields.error.flatten().fieldErrors,
       message: "Missing Fields. Failed to Create Survey.",
     };
   }
 
-  const { title, description, startDate, endDate, recipients } =
-    validatedFields.data;
-  const date = new Date().toISOString().split("T")[0];
   try {
-    await sql`
-    INSERT INTO surveys (title, description, start_date, end_date, created_at, created_by, status)
-    VALUES (${title}, ${description}, ${startDate}, ${endDate}, now(), 'admin', 'activa')
+    const session = await auth();
+    console.log(session?.user);
+    if (session?.user) {
+      const user = await getUser(session.user.email!);
+      console.log(user);
+      if (!user) {
+        return {
+          message: "Unauthorized. Please log in.",
+        };
+      }
+      const result = await sql`
+    INSERT INTO surveys (title, description, start_date, end_date, created_by)
+    VALUES (${survey.title}, ${survey.description}, ${survey.startDate}, ${survey.endDate}, ${user.id})
+    RETURNING id
   `;
+      const surveyId = result[0].id;
+
+      await createSurveyQuestions(surveyId, survey.questions);
+      if (survey.recipients && survey.recipients.length > 0) {
+        await createSurveysUsers(surveyId, survey.recipients);
+      }
+    }
   } catch (error) {
     console.error(error);
     return {
@@ -69,12 +109,58 @@ export async function createSurvey(prevState: State, formData: FormData) {
   redirect("/dashboard/surveys");
 }
 
+export async function createSurveyQuestions(
+  surveyId: string,
+  questions: QuestionField[]
+) {
+  try {
+    for (const question of questions) {
+      const result = await sql`
+      INSERT INTO survey_questions (survey_id, title, description, type, position)
+      VALUES (${surveyId}, ${question.title}, ${question.description}, ${
+        question.type === "single" ? 1 : 2
+      }, ${question.position})
+      RETURNING id
+    `;
+
+      const questionId = result[0].id;
+
+      for (const option of question.options) {
+        await sql`
+        INSERT INTO survey_options (question_id, name, position)
+        VALUES (${questionId}, ${option.name}, ${option.position})
+      `;
+      }
+    }
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to create survey questions.");
+  }
+}
+
+export async function createSurveysUsers(
+  surveyId: string,
+  recipients: string[]
+) {
+  try {
+    for (const recipient of recipients) {
+      await sql`
+        INSERT INTO surveys_users (survey_id, user_id)
+        VALUES (${surveyId}, ${recipient})
+      `;
+    }
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to create survey users.");
+  }
+}
+
 export async function updateSurvey(
   id: string,
   prevState: State,
   formData: FormData
 ) {
-  const validatedFields = UpdateSurvey.safeParse({
+  /*const validatedFields = UpdateSurvey.safeParse({
     title: formData.get("title"),
     description: formData.get("description"),
     startDate: formData.get("startDate"),
@@ -89,13 +175,10 @@ export async function updateSurvey(
     };
   }
 
-  const { title, description, startDate, endDate, recipients } =
-    validatedFields.data;
-
   try {
     await sql`
     UPDATE surveys
-    SET title = ${title}, description = ${description}, start_date = ${startDate}, end_date = ${endDate}, status = 'activa'
+    SET title = ${}, description = ${description}, start_date = ${startDate}, end_date = ${endDate}, status = 'activa'
     WHERE id = ${id}
   `;
   } catch (error) {
@@ -103,7 +186,7 @@ export async function updateSurvey(
     return {
       message: "Database Error: Failed to Update Survey.",
     };
-  }
+  }*/
   revalidatePath("/dashboard/surveys");
   redirect("/dashboard/surveys");
 }

@@ -27,8 +27,12 @@ export type SurveyField = {
   id?: string;
   title: string;
   description: string;
-  created_at: string;
-  created_by: string;
+  created_at?: string;
+  created_by?: string;
+  startDate: Date | null;
+  endDate: Date | null;
+  recipients?: string[];
+  status?: "pendiente" | "activa" | "cerrada";
   questions: QuestionField[];
 };
 
@@ -37,5 +41,13 @@ export type QuestionField = {
   title: string;
   description: string;
   type: "single" | "multiple";
-  options: string[];
+  options: OptionField[];
+  position: number;
+};
+
+export type OptionField = {
+  id?: string;
+  question_id?: string;
+  name: string;
+  position: number;
 };

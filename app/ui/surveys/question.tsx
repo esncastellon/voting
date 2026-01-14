@@ -37,14 +37,19 @@ export default function QuestionForm({
   const handleOptionChange = (index: number, value: string) => {
     setQuestion({
       ...question,
-      options: question.options.map((opt, i) => (i === index ? value : opt)),
+      options: question.options.map((opt, i) =>
+        i === index ? { ...opt, name: value } : opt
+      ),
     });
   };
 
   const addOption = () => {
     setQuestion({
       ...question,
-      options: [...question.options, ""],
+      options: [
+        ...question.options,
+        { name: "", position: question.options.length },
+      ],
     });
   };
 
@@ -85,6 +90,7 @@ export default function QuestionForm({
           onChange={(e) =>
             handleTypeChange(e.target.value as "single" | "multiple")
           }
+          label="Tipo de selección"
         >
           <MenuItem value="single">Única</MenuItem>
           <MenuItem value="multiple">Múltiple</MenuItem>
@@ -107,7 +113,7 @@ export default function QuestionForm({
             />
           )}
           <TextField
-            value={option}
+            value={option.name}
             onChange={(e) => handleOptionChange(index, e.target.value)}
             placeholder={`Opción ${index + 1}`}
             fullWidth

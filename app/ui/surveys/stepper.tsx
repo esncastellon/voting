@@ -5,22 +5,20 @@ import Step from "@mui/material/Step";
 import StepLabel from "@mui/material/StepLabel";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
-import GeneralInfo from "./general-info";
-import SharingForm from "./sharing-form";
-import { RoleField, UserField } from "@/app/lib/user/definitions";
+import { Fragment } from "react";
 
 const steps = ["Información general", "Visibilidad", "Create an ad"];
 
 export default function HorizontalLinearStepper({
-  roles,
-  users,
+  activeStep,
+  setActiveStep,
+  children,
 }: {
-  roles: RoleField[];
-  users: UserField[];
+  activeStep: number;
+  setActiveStep: React.Dispatch<React.SetStateAction<number>>;
+  children: React.ReactNode;
 }) {
-  const [activeStep, setActiveStep] = React.useState(0);
   const [skipped, setSkipped] = React.useState(new Set<number>());
-
   const isStepOptional = (step: number) => {
     return step === 1;
   };
@@ -46,8 +44,6 @@ export default function HorizontalLinearStepper({
 
   const handleSkip = () => {
     if (!isStepOptional(activeStep)) {
-      // You probably want to guard against something like this,
-      // it should never occur unless someone's actively trying to break something.
       throw new Error("You can't skip a step that isn't optional.");
     }
 
@@ -87,7 +83,7 @@ export default function HorizontalLinearStepper({
         })}
       </Stepper>
       {activeStep === steps.length ? (
-        <React.Fragment>
+        <Fragment>
           <Typography sx={{ mt: 2, mb: 1 }}>
             All steps completed - you&apos;re finished
           </Typography>
@@ -95,11 +91,10 @@ export default function HorizontalLinearStepper({
             <Box sx={{ flex: "1 1 auto" }} />
             <Button onClick={handleReset}>Reset</Button>
           </Box>
-        </React.Fragment>
+        </Fragment>
       ) : (
-        <React.Fragment>
-          {activeStep === 0 && <GeneralInfo />}
-          {activeStep === 1 && <SharingForm users={users} roles={roles} />}
+        <Fragment>
+          {children}
           <Box sx={{ display: "flex", flexDirection: "row", pt: 2 }}>
             {activeStep === 0 ? (
               <Button color="inherit" href="/dashboard/surveys">
@@ -118,10 +113,13 @@ export default function HorizontalLinearStepper({
               </Button>
             )}
             <Button onClick={handleNext}>
-              {activeStep === steps.length - 1 ? "Crear Votación" : "Siguiente"}
+              {activeStep !== steps.length - 1 && "Siguiente"}
+            </Button>
+            <Button type="submit">
+              {activeStep === steps.length - 1 && "Crear Votación"}
             </Button>
           </Box>
-        </React.Fragment>
+        </Fragment>
       )}
     </Box>
   );

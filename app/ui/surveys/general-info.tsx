@@ -1,27 +1,17 @@
 "use client";
 
-import { createSurvey, State } from "@/app/lib/survey/actions";
-import { useActionState } from "react";
 import React from "react";
 import SurveyQuestions from "./survey-questions";
 import TextField from "@mui/material/TextField";
-import { QuestionField } from "@/app/lib/survey/definitions";
+import { QuestionField, SurveyField } from "@/app/lib/survey/definitions";
 
-export default function GeneralInfo({}: {}) {
-  const initialState: State = { message: null, errors: {} };
-  const [survey, setSurvey] = React.useState({
-    title: "",
-    description: "",
-    questions: [
-      {
-        title: "",
-        description: "",
-        type: "single" as "single" | "multiple",
-        options: ["", ""],
-      },
-    ],
-  });
-
+export default function GeneralInfo({
+  survey,
+  setSurvey,
+}: {
+  survey: SurveyField;
+  setSurvey: React.Dispatch<React.SetStateAction<SurveyField>>;
+}) {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setSurvey({ ...survey, [name]: value });
