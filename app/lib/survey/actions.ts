@@ -7,11 +7,10 @@ import postgres from "postgres";
 import { signIn, auth, getUser } from "@/auth";
 import { AuthError } from "next-auth";
 import { QuestionField, SurveyField } from "./definitions";
-import { fetchUsersByRole } from "../user/data";
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
 const FormSchema = z.object({
-  id: z.string(),
+  id: z.number(),
   title: z.string(),
   description: z.string(),
   startDate: z.preprocess(
@@ -22,17 +21,17 @@ const FormSchema = z.object({
     (val) => (val ? new Date(val as string) : null),
     z.date().nullable()
   ),
-  recipients: z.number().array().optional(),
+  recipients: z.string().array().optional(),
   questions: z
     .array(
       z.object({
-        id: z.string().optional(),
+        id: z.number().nullable().optional(),
         title: z.string(),
         description: z.string().optional(),
         type: z.enum(["single", "multiple"]),
         options: z.array(
           z.object({
-            id: z.string().optional(),
+            id: z.number().optional(),
             name: z.string(),
             position: z.number(),
           })
@@ -85,7 +84,7 @@ export async function createSurvey(
       }
       const result = await sql`
     INSERT INTO surveys (title, description, start_date, end_date, created_by)
-    VALUES (${survey.title}, ${survey.description}, ${survey.startDate}, ${survey.endDate}, ${user.id})
+    VALUES (${survey.title}, ${survey.description}, ${survey.start_date}, ${survey.end_date}, ${user.id})
     RETURNING id
   `;
       const surveyId = result[0].id;
@@ -141,13 +140,10 @@ export async function createSurveysUsers(
 ) {
   try {
     for (const recipient of recipients) {
-      const users = await fetchUsersByRole(recipient);
-      for (const user of users) {
-        await sql`
+      await sql`
           INSERT INTO surveys_users (survey_id, user_id)
-          VALUES (${surveyId}, ${user.id})
+          VALUES (${surveyId}, ${recipient})
         `;
-      }
     }
   } catch (error) {
     console.error("Database Error:", error);
@@ -155,22 +151,14 @@ export async function createSurveysUsers(
   }
 }
 
-export async function updateSurvey(
-  id: string,
-  prevState: State,
-  formData: FormData
-) {
-  /*const validatedFields = UpdateSurvey.safeParse({
-    title: formData.get("title"),
-    description: formData.get("description"),
-    startDate: formData.get("startDate"),
-    endDate: formData.get("endDate"),
-    recipients: formData.get("recipients"),
-  });
+export async function updateSurvey(prevState: State, formData: FormData) {
+  const raw = formData.get("survey") as string;
+  const survey: SurveyField = JSON.parse(raw);
+
+  const validatedFields = UpdateSurvey.safeParse(survey);
 
   if (!validatedFields.success) {
     return {
-      errors: validatedFields.error.flatten().fieldErrors,
       message: "Missing Fields. Failed to Update Survey.",
     };
   }
@@ -178,20 +166,75 @@ export async function updateSurvey(
   try {
     await sql`
     UPDATE surveys
-    SET title = ${}, description = ${description}, start_date = ${startDate}, end_date = ${endDate}, status = 'activa'
-    WHERE id = ${id}
+    SET
+      title = ${survey.title},
+      description = ${survey.description},
+      end_date = ${survey.end_date}
+    WHERE id = ${survey.id}
   `;
   } catch (error) {
     console.error(error);
     return {
       message: "Database Error: Failed to Update Survey.",
     };
-  }*/
+  }
+
+  revalidatePath("/dashboard/surveys");
+  redirect("/dashboard/surveys");
+}
+
+export async function updateSurveyDetails(
+  prevState: State,
+  formData: FormData
+) {
+  const raw = formData.get("survey") as string;
+  const survey: SurveyField = JSON.parse(raw);
+
+  const validatedFields = UpdateSurvey.safeParse(survey);
+
+  if (!validatedFields.success) {
+    return {
+      message: "Missing Fields. Failed to Update Survey.",
+    };
+  }
+
+  try {
+    await sql`
+    UPDATE surveys
+    SET
+      title = ${survey.title},
+      description = ${survey.description},
+      start_date = ${survey.start_date},
+      end_date = ${survey.end_date}
+    WHERE id = ${survey.id}
+  `;
+
+    await sql`DELETE FROM survey_options WHERE question_id IN (
+      SELECT id FROM survey_questions WHERE survey_id = ${survey.id}
+    )`;
+    await sql`DELETE FROM survey_questions WHERE survey_id = ${survey.id}`;
+    await createSurveyQuestions(survey.id, survey.questions);
+
+    await sql`DELETE FROM surveys_users WHERE survey_id = ${survey.id}`;
+    if (survey.recipients && survey.recipients.length > 0) {
+      await createSurveysUsers(survey.id, survey.recipients);
+    }
+  } catch (error) {
+    console.error(error);
+    return {
+      message: "Database Error: Failed to Update Survey.",
+    };
+  }
+
   revalidatePath("/dashboard/surveys");
   redirect("/dashboard/surveys");
 }
 
 export async function deleteSurvey(id: string) {
+  await sql`DELETE FROM survey_answers WHERE survey_id = ${id}`;
+  await sql`DELETE FROM survey_questions WHERE survey_id = ${id}`;
+  await sql`DELETE FROM surveys_users WHERE survey_id = ${id}`;
+
   await sql`DELETE FROM surveys WHERE id = ${id}`;
   revalidatePath("/dashboard/surveys");
 }

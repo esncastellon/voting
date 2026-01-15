@@ -8,9 +8,11 @@ import { QuestionField, SurveyField } from "@/app/lib/survey/definitions";
 export default function GeneralInfo({
   survey,
   setSurvey,
+  readOnly = false,
 }: {
   survey: SurveyField;
   setSurvey: React.Dispatch<React.SetStateAction<SurveyField>>;
+  readOnly?: boolean;
 }) {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -51,6 +53,7 @@ export default function GeneralInfo({
       <SurveyQuestions
         questions={survey.questions}
         setQuestions={setQuestions}
+        readOnly={readOnly}
       />
     </div>
   );

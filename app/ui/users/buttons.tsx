@@ -1,6 +1,6 @@
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { deletePoll } from "@/app/lib/survey/actions";
+import { deleteSurvey } from "@/app/lib/survey/actions";
 
 export function CreateUser() {
   return (
@@ -26,7 +26,7 @@ export function UpdateUser({ id }: { id: string }) {
 }
 
 export function DeleteUser({ id }: { id: string }) {
-  const deleteUserWithId = deletePoll.bind(null, id);
+  const deleteUserWithId = deleteSurvey.bind(null, id);
 
   return (
     <form action={deleteUserWithId}>

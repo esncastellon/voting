@@ -1,14 +1,15 @@
 import Form from "@/app/ui/surveys/create-form";
 import Breadcrumbs from "@/app/ui/commons/breadcrumbs";
-import { fetchRoles } from "@/app/lib/user/data";
+import { fetchRolesWithUsers } from "@/app/lib/user/data";
 import { Metadata } from "next";
+import { createSurvey } from "@/app/lib/survey/actions";
 
 export const metadata: Metadata = {
   title: "Crear Votación",
 };
 
 export default async function Page() {
-  const roles = await fetchRoles();
+  const rolesWithUsers = await fetchRolesWithUsers();
 
   return (
     <main>
@@ -22,7 +23,7 @@ export default async function Page() {
           },
         ]}
       />
-      <Form roles={roles} />
+      <Form rolesWithUsers={rolesWithUsers} action={createSurvey as any} />
     </main>
   );
 }

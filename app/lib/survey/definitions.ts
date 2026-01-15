@@ -21,23 +21,24 @@ export type SurveysTable = {
   name: string;
   image_url: string;
   status: "pendiente" | "activa" | "cerrada";
+  start_date: string | null;
 };
 
 export type SurveyField = {
-  id?: string;
+  id: string;
   title: string;
   description: string;
   created_at?: string;
   created_by?: string;
-  startDate: Date | null;
-  endDate: Date | null;
+  start_date: Date | null;
+  end_date: Date | null;
   recipients?: string[];
   status?: "pendiente" | "activa" | "cerrada";
   questions: QuestionField[];
 };
 
 export type QuestionField = {
-  id?: string;
+  id: string | null;
   title: string;
   description: string;
   type: "single" | "multiple";

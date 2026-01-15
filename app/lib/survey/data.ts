@@ -1,5 +1,11 @@
 import postgres from "postgres";
-import { LatestPollsRaw, SurveysTable } from "./definitions";
+import {
+  LatestPollsRaw,
+  OptionField,
+  QuestionField,
+  SurveyField,
+  SurveysTable,
+} from "./definitions";
 import { formatCurrency } from "./utils";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
@@ -72,7 +78,8 @@ export async function fetchFilteredSurveys(query: string, currentPage: number) {
         surveys.created_at,
         surveys.created_by,
         users.name,
-        users.image_url
+        users.image_url,
+        surveys.start_date
       FROM surveys
       JOIN users ON surveys.created_by = users.id
       WHERE
@@ -106,5 +113,99 @@ export async function fetchSurveysPages(query: string) {
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to fetch total number of surveys.");
+  }
+}
+
+export async function fetchSurveyById(id: string) {
+  try {
+    const data = await sql<SurveysTable[]>`
+      SELECT 
+        surveys.id,
+        surveys.title,
+        surveys.description,
+        surveys.created_at,
+        surveys.created_by,
+        users.name,
+        users.image_url,
+        surveys.start_date
+      FROM surveys
+      JOIN users ON surveys.created_by = users.id
+      WHERE surveys.id = ${id}
+    `;
+
+    return data[0] || null;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch survey by ID.");
+  }
+}
+
+export async function fetchSurveyDetailsById(id: string): Promise<SurveyField> {
+  try {
+    const surveyData: SurveyField[] = await sql`
+      SELECT
+        id,
+        title,
+        description,
+        created_at,
+        start_date,
+        end_date,
+        status
+      FROM surveys
+      WHERE id = ${id}
+    `;
+
+    if (surveyData.length === 0) {
+      return new Error("Survey not found.") as unknown as SurveyField;
+    }
+
+    const questionsData: QuestionField[] = await sql`
+      SELECT
+        id,
+        title,
+        description,
+        case type
+          when 1 then 'single'
+          when 2 then 'multiple'
+        end as type,
+        position
+      FROM survey_questions
+      WHERE survey_id = ${id}
+      ORDER BY position ASC
+    `;
+
+    for (const question of questionsData) {
+      const optionsData: OptionField[] = await sql`
+        SELECT
+          id,
+          name,
+          position
+        FROM survey_options
+        WHERE question_id = ${question.id}
+        ORDER BY position ASC
+      `;
+      question.options = optionsData;
+    }
+
+    const recipientsData: { user_id: string }[] = await sql`
+      SELECT
+        user_id
+      FROM surveys_users
+      WHERE survey_id = ${id}
+    `;
+
+    surveyData[0].recipients = recipientsData.map(
+      (recipient) => recipient.user_id
+    );
+
+    const surveyDetails: SurveyField = {
+      ...surveyData[0],
+      questions: questionsData,
+    };
+
+    return surveyDetails;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch survey details by ID.");
   }
 }

@@ -1,55 +1,60 @@
 "use client";
 
-import { RoleField } from "@/app/lib/user/definitions";
-import Select, { SelectChangeEvent } from "@mui/material/Select";
+import Select from "@mui/material/Select";
 import React from "react";
-import OutlinedInput from "@mui/material/OutlinedInput";
-import MenuItem from "@mui/material/MenuItem";
-import Checkbox from "@mui/material/Checkbox";
-import ListItemText from "@mui/material/ListItemText";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import { SurveyField } from "@/app/lib/survey/definitions";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs, { Dayjs } from "dayjs";
+import { TreeNode } from "../commons/treeSelect";
+import { RichTreeView } from "@mui/x-tree-view/RichTreeView";
+import { FormControl, InputLabel } from "@mui/material";
+import { useApplyPropagationToSelectedItemsOnMount } from "@mui/x-tree-view/hooks";
 
-const ITEM_HEIGHT = 48;
-const ITEM_PADDING_TOP = 8;
-const MenuProps = {
-  PaperProps: {
-    style: {
-      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-      width: 250,
-    },
-  },
-};
+const selectionPropagation = { parents: true, descendants: true };
 
 export default function SharingForm({
-  roles,
+  rolesWithUsers,
   survey,
   setSurvey,
+  readOnly = false,
 }: {
-  roles: RoleField[];
+  rolesWithUsers: TreeNode[];
   survey: SurveyField;
   setSurvey: React.Dispatch<React.SetStateAction<SurveyField>>;
+  readOnly?: boolean;
 }) {
-  const handleRecipientsChange = (event: SelectChangeEvent<string[]>) => {
-    const {
-      target: { value },
-    } = event;
-    const recipientsList = typeof value === "string" ? value.split(",") : value;
-    setSurvey((prev) => ({ ...prev, recipients: recipientsList }));
+  const initialSelectedItems = useApplyPropagationToSelectedItemsOnMount({
+    items: rolesWithUsers,
+    selectionPropagation,
+    selectedItems: survey.recipients || [],
+  });
+
+  const [selectedItems, setSelectedItems] =
+    React.useState(initialSelectedItems);
+
+  const handleStartDateChange = (value: Dayjs | null) => {
+    setSurvey((prev) => ({ ...prev, start_date: value?.toDate() || null }));
   };
 
-  const handleStartDateChange = (date: Date) => {
-    setSurvey((prev) => ({ ...prev, startDate: date }));
+  const handleEndDateChange = (value: Dayjs | null) => {
+    setSurvey((prev) => ({ ...prev, end_date: value?.toDate() || null }));
   };
 
-  const handleEndDateChange = (date: Date) => {
-    setSurvey((prev) => ({ ...prev, endDate: date }));
+  const handleRecipientsChange = (
+    event: React.SyntheticEvent | null,
+    newSelectedItems: string[]
+  ) => {
+    console.log(rolesWithUsers);
+    console.log(newSelectedItems);
+    setSelectedItems(newSelectedItems);
+    setSurvey((prev) => ({
+      ...prev,
+      recipients: newSelectedItems.filter((id) => isNaN(Number(id))),
+    }));
   };
+
   return (
     <div className="rounded-md bg-gray-50 p-4 md:p-6">
       <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -57,48 +62,56 @@ export default function SharingForm({
         <DatePicker
           label="Fecha de inicio"
           name="startDate"
-          value={survey.startDate || null}
+          value={survey.start_date ? dayjs(survey.start_date) : null}
           onChange={handleStartDateChange}
+          disabled={readOnly}
         />
 
         {/* End Date */}
         <DatePicker
           label="Fecha de finalización"
           name="endDate"
-          value={survey.endDate || null}
+          value={survey.end_date ? dayjs(survey.end_date) : null}
           onChange={handleEndDateChange}
         />
 
         {/* Recipients */}
         <FormControl fullWidth>
-          <InputLabel id="recipients-label">
-            Selecciona los destinatarios
-          </InputLabel>
+          <InputLabel id="multi-label">Selecciona los destinatarios</InputLabel>
           <Select
-            id="recipients"
-            name="recipients"
             multiple
-            value={survey.recipients}
-            input={<OutlinedInput label="Selecciona los destinatarios" />}
+            value={survey.recipients || []}
+            fullWidth
+            label="Selecciona los destinatarios"
+            labelId="multi-label"
+            disabled={readOnly}
             renderValue={(selected) =>
               selected
-                .map((id) => roles.find((role) => role.id === id)?.name)
+                .map((id) => {
+                  const findItem = (items: TreeNode[]): string | null => {
+                    for (const item of items) {
+                      if (item.id === id) return item.label;
+                      if (item.children) {
+                        const childResult = findItem(item.children);
+                        if (childResult) return childResult;
+                      }
+                    }
+                    return null;
+                  };
+                  return findItem(rolesWithUsers);
+                })
                 .filter(Boolean)
                 .join(", ")
             }
-            MenuProps={MenuProps}
-            onChange={handleRecipientsChange}
-            labelId="recipients-label"
-            IconComponent={AccountCircleOutlinedIcon}
           >
-            {roles.map((role) => (
-              <MenuItem key={role.id} value={role.id}>
-                <Checkbox
-                  checked={survey.recipients?.includes(role.id) || false}
-                />
-                <ListItemText primary={role.name} />
-              </MenuItem>
-            ))}
+            <RichTreeView
+              items={rolesWithUsers}
+              checkboxSelection
+              multiSelect
+              selectionPropagation={selectionPropagation}
+              selectedItems={selectedItems}
+              onSelectedItemsChange={handleRecipientsChange}
+            />
           </Select>
         </FormControl>
       </LocalizationProvider>

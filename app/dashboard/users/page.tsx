@@ -1,5 +1,5 @@
 import { lato } from "@/app/ui/fonts";
-import { fetchCustomersPages } from "@/app/lib/survey/data";
+import { fetchCustomersPages } from "@/app/lib/user/data";
 import { Metadata } from "next";
 import { CreateUser } from "@/app/ui/users/buttons";
 import Pagination from "@/app/ui/commons/pagination";

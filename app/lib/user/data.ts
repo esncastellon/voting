@@ -1,6 +1,11 @@
 import postgres from "postgres";
-import { RoleField, UserField, UsersTableType } from "../user/definitions";
-import { Role } from "firebase/ai";
+import {
+  RoleField,
+  UserField,
+  UsersRoleField,
+  UsersTableType,
+} from "../user/definitions";
+import { TreeNode } from "@/app/ui/commons/treeSelect";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
@@ -109,5 +114,44 @@ export async function fetchUsersByRole(roleId: string) {
   } catch (err) {
     console.error("Database Error:", err);
     throw new Error("Failed to fetch users by role.");
+  }
+}
+
+export async function fetchRolesWithUsers() {
+  try {
+    const usersRole = await sql<UsersRoleField[]>`
+      SELECT
+        roles.id AS role_id,
+        roles.name AS role_name,
+        users.id AS user_id,
+        users.name AS user_name
+      FROM roles
+      RIGHT JOIN users ON users.role_id = roles.id
+      ORDER BY roles.name ASC, users.name ASC
+    `;
+
+    const map = new Map<string, TreeNode>();
+
+    for (const row of usersRole) {
+      if (!map.has(row.role_id)) {
+        map.set(row.role_id, {
+          id: row.role_id + "",
+          label: row.role_name,
+          children: [],
+        });
+      }
+
+      if (row.user_id) {
+        map.get(row.role_id)!.children!.push({
+          id: row.user_id,
+          label: row.user_name!,
+        });
+      }
+    }
+
+    return Array.from(map.values());
+  } catch (err) {
+    console.error("Database Error:", err);
+    throw new Error("Failed to fetch users with roles.");
   }
 }

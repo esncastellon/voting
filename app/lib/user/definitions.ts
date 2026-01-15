@@ -88,6 +88,13 @@ export type RoleField = {
   name: string;
 };
 
+export type UsersRoleField = {
+  role_id: string;
+  role_name: string;
+  user_id: string | null;
+  user_name: string | null;
+};
+
 export type InvoiceForm = {
   id: string;
   customer_id: string;

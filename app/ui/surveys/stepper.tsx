@@ -7,7 +7,7 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { Fragment } from "react";
 
-const steps = ["Información general", "Visibilidad", "Create an ad"];
+const steps = ["Información general", "Visibilidad", "Crear Votación"];
 
 export default function HorizontalLinearStepper({
   activeStep,

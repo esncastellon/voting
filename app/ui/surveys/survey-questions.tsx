@@ -11,14 +11,17 @@ import Box from "@mui/material/Box";
 export default function SurveyQuestions({
   questions,
   setQuestions,
+  readOnly = false,
 }: {
   questions: QuestionField[];
   setQuestions: (questions: QuestionField[]) => void;
+  readOnly?: boolean;
 }) {
   const addQuestion = () =>
     setQuestions([
       ...questions,
       {
+        id: null,
         title: "",
         description: "",
         type: "single" as "single" | "multiple",
@@ -56,16 +59,22 @@ export default function SurveyQuestions({
             setQuestion={(updatedQuestion) =>
               setQuestion(index, updatedQuestion)
             }
+            readOnly={readOnly}
           />
           <IconButton
             onClick={() => removeQuestion(index)}
-            disabled={questions.length <= 1}
+            disabled={questions.length <= 1 || readOnly}
           >
             <Remove />
           </IconButton>
         </Box>
       ))}
-      <Button variant="outlined" startIcon={<Add />} onClick={addQuestion}>
+      <Button
+        variant="outlined"
+        startIcon={<Add />}
+        onClick={addQuestion}
+        disabled={readOnly}
+      >
         Agregar pregunta
       </Button>
     </div>

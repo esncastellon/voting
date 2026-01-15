@@ -17,9 +17,11 @@ import { QuestionField } from "@/app/lib/survey/definitions";
 export default function QuestionForm({
   question,
   setQuestion,
+  readOnly = false,
 }: {
   question: QuestionField;
   setQuestion: (question: QuestionField) => void;
+  readOnly?: boolean;
 }) {
   const handleTitleChange = (value: string) => {
     setQuestion({ ...question, title: value });
@@ -71,6 +73,7 @@ export default function QuestionForm({
         className="text-bold mb-4"
         value={question.title}
         onChange={(e) => handleTitleChange(e.target.value)}
+        disabled={readOnly}
       />
 
       {/* Description */}
@@ -81,6 +84,7 @@ export default function QuestionForm({
         className="text-normal mb-4"
         value={question.description}
         onChange={(e) => handleDescriptionChange(e.target.value)}
+        disabled={readOnly}
       />
 
       <FormControl fullWidth margin="normal">
@@ -91,6 +95,7 @@ export default function QuestionForm({
             handleTypeChange(e.target.value as "single" | "multiple")
           }
           label="Tipo de selección"
+          disabled={readOnly}
         >
           <MenuItem value="single">Única</MenuItem>
           <MenuItem value="multiple">Múltiple</MenuItem>
@@ -118,16 +123,22 @@ export default function QuestionForm({
             placeholder={`Opción ${index + 1}`}
             fullWidth
             variant="standard"
+            disabled={readOnly}
           />
           <IconButton
             onClick={() => removeOption(index)}
-            disabled={question.options.length <= 2} // mínimo 2 opciones
+            disabled={question.options.length <= 2 || readOnly} // mínimo 2 opciones
           >
             <Remove />
           </IconButton>
         </Box>
       ))}
-      <Button variant="outlined" startIcon={<Add />} onClick={addOption}>
+      <Button
+        variant="outlined"
+        startIcon={<Add />}
+        onClick={addOption}
+        disabled={readOnly}
+      >
         Agregar opción
       </Button>
     </div>
