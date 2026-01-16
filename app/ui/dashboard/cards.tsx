@@ -1,35 +1,36 @@
-import {
-  BanknotesIcon,
-  ClockIcon,
-  UserGroupIcon,
-  InboxIcon,
-} from "@heroicons/react/24/outline";
+import { UserGroupIcon } from "@heroicons/react/24/outline";
+import PollOutlinedIcon from "@mui/icons-material/PollOutlined";
+import MeetingRoomOutlinedIcon from "@mui/icons-material/MeetingRoomOutlined";
 import { lato } from "@/app/ui/fonts";
 import { fetchCardData } from "@/app/lib/survey/data";
 
 const iconMap = {
-  collected: BanknotesIcon,
-  customers: UserGroupIcon,
-  pending: ClockIcon,
-  invoices: InboxIcon,
+  surveys: PollOutlinedIcon,
+  assemblies: MeetingRoomOutlinedIcon,
+  members: UserGroupIcon,
+  collaborators: UserGroupIcon,
 };
 
 export default async function CardWrapper() {
   const {
-    numberOfInvoices,
-    numberOfCustomers,
-    totalPaidInvoices,
-    totalPendingInvoices,
+    numberOfSurveys,
+    numberOfAssemblies,
+    numberOfMembers,
+    numberOfCollaborators,
   } = await fetchCardData();
   return (
     <>
-      <Card title="Collected" value={totalPaidInvoices} type="collected" />
-      <Card title="Pending" value={totalPendingInvoices} type="pending" />
-      <Card title="Total Invoices" value={numberOfInvoices} type="invoices" />
+      <Card title="Votaciones activas" value={numberOfSurveys} type="surveys" />
       <Card
-        title="Total Customers"
-        value={numberOfCustomers}
-        type="customers"
+        title="Asambleas futuras"
+        value={numberOfAssemblies}
+        type="assemblies"
+      />
+      <Card title="Total Miembros" value={numberOfMembers} type="members" />
+      <Card
+        title="Total Colaboradores"
+        value={numberOfCollaborators}
+        type="collaborators"
       />
     </>
   );
@@ -42,7 +43,7 @@ export function Card({
 }: {
   title: string;
   value: number | string;
-  type: "invoices" | "customers" | "pending" | "collected";
+  type: "surveys" | "assemblies" | "members" | "collaborators";
 }) {
   const Icon = iconMap[type];
 

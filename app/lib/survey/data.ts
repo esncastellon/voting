@@ -1,62 +1,57 @@
 import postgres from "postgres";
 import {
-  LatestPollsRaw,
+  LatestSurveysRaw,
   OptionField,
   QuestionField,
   SurveyField,
   SurveysTable,
 } from "./definitions";
-import { formatCurrency } from "./utils";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
-export async function fetchLatestPolls() {
+export async function fetchLatestSurveys() {
   try {
-    const data = await sql<LatestPollsRaw[]>`
-      SELECT polls.id, polls.title, polls.description, polls.created_at, polls.created_by
-      FROM polls
-      JOIN users ON polls.user_id = users.id
-      ORDER BY polls.date DESC
+    const data = await sql<LatestSurveysRaw[]>`
+      SELECT surveys.id, surveys.title, surveys.description, surveys.created_at, surveys.created_by, 
+        surveys.start_date, surveys.end_date, surveys.status
+      FROM surveys
+      JOIN users ON surveys.created_by = users.id
+      ORDER BY surveys.start_date DESC
       LIMIT 5`;
 
-    const latestPolls = data.map((poll) => ({
-      ...poll,
+    const latestSurveys = data.map((survey) => ({
+      ...survey,
     }));
-    return latestPolls;
+    return latestSurveys;
   } catch (error) {
     console.error("Database Error:", error);
-    throw new Error("Failed to fetch the latest polls.");
+    throw new Error("Failed to fetch the latest surveys.");
   }
 }
 
 export async function fetchCardData() {
   try {
-    // You can probably combine these into a single SQL query
-    // However, we are intentionally splitting them to demonstrate
-    // how to initialize multiple queries in parallel with JS.
-    const invoiceCountPromise = sql`SELECT COUNT(*) FROM invoices`;
-    const customerCountPromise = sql`SELECT COUNT(*) FROM customers`;
-    const invoiceStatusPromise = sql`SELECT
-         SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) AS "paid",
-         SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) AS "pending"
-         FROM invoices`;
+    const surveysCountPromise = sql`SELECT COUNT(*) FROM surveys WHERE start_date <= NOW() AND end_date >= NOW()`;
+    const assembliesCountPromise = sql`SELECT COUNT(*) FROM assemblies WHERE start_date >= NOW()`;
+    const memberCountPromise = sql`SELECT COUNT(*) FROM users WHERE role_id in (1, 2)`;
+    const collaboratorCountPromise = sql`SELECT COUNT(*) FROM users WHERE role_id = 3`;
 
     const data = await Promise.all([
-      invoiceCountPromise,
-      customerCountPromise,
-      invoiceStatusPromise,
+      surveysCountPromise,
+      assembliesCountPromise,
+      memberCountPromise,
+      collaboratorCountPromise,
     ]);
 
-    const numberOfInvoices = Number(data[0][0].count ?? "0");
-    const numberOfCustomers = Number(data[1][0].count ?? "0");
-    const totalPaidInvoices = formatCurrency(data[2][0].paid ?? "0");
-    const totalPendingInvoices = formatCurrency(data[2][0].pending ?? "0");
-
+    const numberOfSurveys = Number(data[0][0].count ?? "0");
+    const numberOfAssemblies = Number(data[1][0].count ?? "0");
+    const numberOfMembers = Number(data[2][0].count ?? "0");
+    const numberOfCollaborators = Number(data[3][0].count ?? "0");
     return {
-      numberOfCustomers,
-      numberOfInvoices,
-      totalPaidInvoices,
-      totalPendingInvoices,
+      numberOfSurveys,
+      numberOfAssemblies,
+      numberOfMembers,
+      numberOfCollaborators,
     };
   } catch (error) {
     console.error("Database Error:", error);

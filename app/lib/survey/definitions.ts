@@ -4,12 +4,15 @@
 // However, these types are generated automatically if you're using an ORM such as Prisma.
 
 // The database returns a number for amount, but we later format it to a string with the formatCurrency function
-export type LatestPollsRaw = {
+export type LatestSurveysRaw = {
   id: string;
   title: string;
   description: string;
   created_at: string;
   created_by: string;
+  start_date: string | null;
+  end_date: string | null;
+  status: "pendiente" | "activa" | "cerrada";
 };
 
 export type SurveysTable = {
