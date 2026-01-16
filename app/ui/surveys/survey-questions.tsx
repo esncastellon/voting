@@ -3,7 +3,7 @@
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import { Add, Remove } from "@mui/icons-material";
+import { Add, Remove, CopyAll } from "@mui/icons-material";
 import QuestionForm from "./question";
 import { QuestionField } from "@/app/lib/survey/definitions";
 import Box from "@mui/material/Box";
@@ -40,6 +40,13 @@ export default function SurveyQuestions({
     setQuestions(newQuestions);
   };
 
+  const duplicateQuestion = (index: number) => {
+    const question = questions.filter((_, i) => i === index)[0];
+    question.id = null;
+    question.position = questions.length;
+    setQuestions([...questions, question]);
+  };
+
   return (
     <div className="pt-4">
       <Typography mt={2} mb={1}>
@@ -66,6 +73,12 @@ export default function SurveyQuestions({
             disabled={questions.length <= 1 || readOnly}
           >
             <Remove />
+          </IconButton>
+          <IconButton
+            onClick={() => duplicateQuestion(index)}
+            disabled={readOnly}
+          >
+            <CopyAll />
           </IconButton>
         </Box>
       ))}
