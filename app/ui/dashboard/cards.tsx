@@ -1,12 +1,14 @@
-import { UserGroupIcon } from "@heroicons/react/24/outline";
-import PollOutlinedIcon from "@mui/icons-material/PollOutlined";
-import MeetingRoomOutlinedIcon from "@mui/icons-material/MeetingRoomOutlined";
+import {
+  UserGroupIcon,
+  ChartBarIcon,
+  DocumentTextIcon,
+} from "@heroicons/react/24/outline";
 import { lato } from "@/app/ui/fonts";
 import { fetchCardData } from "@/app/lib/survey/data";
 
 const iconMap = {
-  surveys: PollOutlinedIcon,
-  assemblies: MeetingRoomOutlinedIcon,
+  surveys: ChartBarIcon,
+  assemblies: DocumentTextIcon,
   members: UserGroupIcon,
   collaborators: UserGroupIcon,
 };
