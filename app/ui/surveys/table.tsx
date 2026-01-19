@@ -25,6 +25,9 @@ export default async function SurveysTable({
                 <th scope="col" className="px-3 py-5 font-medium">
                   Fecha de inicio
                 </th>
+                <th scope="col" className="px-3 py-5 font-medium">
+                  Deadline
+                </th>
                 <th scope="col" className="px-4 py-5 font-medium sm:pl-6">
                   Creado por
                 </th>
@@ -50,8 +53,15 @@ export default async function SurveysTable({
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
                     {survey.start_date
-                      ? formatDateToLocal(survey.start_date)
-                      : "N/A"}
+                      ? new Date(survey.start_date)
+                          .toLocaleString()
+                          .slice(0, 16)
+                      : "Sin definir"}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3">
+                    {survey.end_date
+                      ? new Date(survey.end_date).toLocaleString().slice(0, 16)
+                      : "Sin definir"}
                   </td>
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex items-center gap-3">

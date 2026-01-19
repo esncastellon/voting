@@ -74,7 +74,8 @@ export async function fetchFilteredSurveys(query: string, currentPage: number) {
         surveys.created_by,
         users.name,
         users.image_url,
-        surveys.start_date
+        surveys.start_date,
+        surveys.end_date
       FROM surveys
       JOIN users ON surveys.created_by = users.id
       WHERE

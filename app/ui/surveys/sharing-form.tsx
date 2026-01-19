@@ -3,7 +3,7 @@
 import Select from "@mui/material/Select";
 import React from "react";
 import { SurveyField } from "@/app/lib/survey/definitions";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
@@ -11,8 +11,13 @@ import { TreeNode } from "../commons/treeSelect";
 import { RichTreeView } from "@mui/x-tree-view/RichTreeView";
 import { FormControl, InputLabel } from "@mui/material";
 import { useApplyPropagationToSelectedItemsOnMount } from "@mui/x-tree-view/hooks";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 
 const selectionPropagation = { parents: true, descendants: true };
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export default function SharingForm({
   rolesWithUsers,
@@ -35,19 +40,26 @@ export default function SharingForm({
     React.useState(initialSelectedItems);
 
   const handleStartDateChange = (value: Dayjs | null) => {
-    setSurvey((prev) => ({ ...prev, start_date: value?.toDate() || null }));
+    console.log(value?.toISOString());
+    console.log(value?.format("DD/MM/YYYY HH:mm"));
+    setSurvey((prev) => ({
+      ...prev,
+      start_date: value?.format("DD/MM/YYYY HH:mm") || null,
+    }));
   };
 
   const handleEndDateChange = (value: Dayjs | null) => {
-    setSurvey((prev) => ({ ...prev, end_date: value?.toDate() || null }));
+    console.log(value?.format("DD/MM/YYYY HH:mm"));
+    setSurvey((prev) => ({
+      ...prev,
+      end_date: value?.format("DD/MM/YYYY HH:mm") || null,
+    }));
   };
 
   const handleRecipientsChange = (
     event: React.SyntheticEvent | null,
     newSelectedItems: string[]
   ) => {
-    console.log(rolesWithUsers);
-    console.log(newSelectedItems);
     setSelectedItems(newSelectedItems);
     setSurvey((prev) => ({
       ...prev,
@@ -59,20 +71,28 @@ export default function SharingForm({
     <div className="rounded-md bg-gray-50 p-4 md:p-6">
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         {/* Start Date */}
-        <DatePicker
+        <DateTimePicker
           label="Fecha de inicio"
           name="startDate"
-          value={survey.start_date ? dayjs(survey.start_date) : null}
+          value={
+            survey.start_date
+              ? dayjs(survey.start_date, "DD/MM/YYYY HH:mm")
+              : null
+          }
           onChange={handleStartDateChange}
           disabled={readOnly}
+          format="DD/MM/YYYY HH:mm"
         />
 
         {/* End Date */}
-        <DatePicker
+        <DateTimePicker
           label="Fecha de finalización"
           name="endDate"
-          value={survey.end_date ? dayjs(survey.end_date) : null}
+          value={
+            survey.end_date ? dayjs(survey.end_date, "DD/MM/YYYY HH:mm") : null
+          }
           onChange={handleEndDateChange}
+          format="DD/MM/YYYY HH:mm"
         />
 
         {/* Recipients */}

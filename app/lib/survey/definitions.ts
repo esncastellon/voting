@@ -25,6 +25,7 @@ export type SurveysTable = {
   image_url: string;
   status: "pendiente" | "activa" | "cerrada";
   start_date: string | null;
+  end_date: string | null;
 };
 
 export type SurveyField = {
@@ -33,8 +34,8 @@ export type SurveyField = {
   description: string;
   created_at?: string;
   created_by?: string;
-  start_date: Date | null;
-  end_date: Date | null;
+  start_date: string | null;
+  end_date: string | null;
   recipients?: string[];
   status?: "pendiente" | "activa" | "cerrada";
   questions: QuestionField[];
