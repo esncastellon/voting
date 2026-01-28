@@ -10,13 +10,13 @@ const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 const FormSchema = z.object({
   id: z.string(),
   name: z.string({
-    invalid_type_error: "Please type a name.",
+    error: "Please type a name.",
   }),
   email: z.string({
-    invalid_type_error: "Please type an email.",
+    error: "Please type an email.",
   }),
   roleId: z.string({
-    invalid_type_error: "Please select a role.",
+    error: "Please select a role.",
   }),
   password: z.string(),
 });
