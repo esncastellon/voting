@@ -5,6 +5,12 @@ import { fetchSurveyDetailsById } from "@/app/lib/survey/data";
 import { updateSurvey, updateSurveyDetails } from "@/app/lib/survey/actions";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export const metadata: Metadata = {
   title: "Editar Votación",
@@ -39,7 +45,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
         surveyFetched={survey}
         rolesWithUsers={rolesWithUsers}
         action={
-          survey.start_date && survey.start_date < new Date()
+          survey.start_date && dayjs.utc(survey.start_date) < dayjs.utc()
             ? (updateSurvey as any)
             : updateSurveyDetails
         }

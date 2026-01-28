@@ -3,6 +3,8 @@
 // For simplicity of teaching, we're manually defining these types.
 // However, these types are generated automatically if you're using an ORM such as Prisma.
 
+import { Dayjs } from "dayjs";
+
 // The database returns a number for amount, but we later format it to a string with the formatCurrency function
 export type LatestSurveysRaw = {
   id: string;
@@ -34,8 +36,8 @@ export type SurveyField = {
   description: string;
   created_at?: string;
   created_by?: string;
-  start_date: string | null;
-  end_date: string | null;
+  start_date: Dayjs | null;
+  end_date: Dayjs | null;
   recipients?: string[];
   status?: "pendiente" | "activa" | "cerrada";
   questions: QuestionField[];

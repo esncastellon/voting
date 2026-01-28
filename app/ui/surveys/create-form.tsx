@@ -8,6 +8,12 @@ import SharingForm from "./sharing-form";
 import GeneralInfo from "./general-info";
 import { SurveyField } from "@/app/lib/survey/definitions";
 import { TreeNode } from "../commons/treeSelect";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export default function Form({
   rolesWithUsers,
@@ -22,34 +28,55 @@ export default function Form({
   const [state, formAction] = useActionState(action, initialState);
   const [activeStep, setActiveStep] = React.useState(0);
   const [survey, setSurvey] = React.useState<SurveyField>(
-    surveyFetched || {
-      id: "",
-      title: "",
-      description: "",
-      questions: [
-        {
-          id: null,
+    surveyFetched
+      ? {
+          ...surveyFetched,
+          start_date: surveyFetched.start_date
+            ? dayjs(surveyFetched.start_date)
+            : null,
+          end_date: surveyFetched.end_date
+            ? dayjs(surveyFetched.end_date)
+            : null,
+        }
+      : {
+          id: "",
           title: "",
           description: "",
-          type: "single" as "single" | "multiple",
-          options: [
-            { name: "", position: 0 },
-            { name: "", position: 1 },
+          questions: [
+            {
+              id: null,
+              title: "",
+              description: "",
+              type: "single" as "single" | "multiple",
+              options: [
+                { name: "", position: 0 },
+                { name: "", position: 1 },
+              ],
+              position: 0,
+            },
           ],
-          position: 0,
+          recipients: [],
+          start_date: null,
+          end_date: null,
         },
-      ],
-      recipients: [],
-      start_date: null,
-      end_date: null,
-    }
   );
 
-  const readOnly = survey.start_date !== null && survey.start_date < new Date();
+  const surveyForBackend = {
+    ...survey,
+    start_date: survey.start_date?.format() || null,
+    end_date: survey.end_date?.format() || null,
+  };
+
+  const readOnly =
+    survey.start_date !== null && dayjs.utc(survey.start_date) < dayjs.utc();
 
   return (
     <form action={formAction}>
-      <input type="hidden" name="survey" value={JSON.stringify(survey)} />
+      <input
+        type="hidden"
+        name="survey"
+        value={JSON.stringify(surveyForBackend)}
+      />
       <HorizontalLinearStepper
         activeStep={activeStep}
         setActiveStep={setActiveStep}

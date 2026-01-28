@@ -13,14 +13,8 @@ const FormSchema = z.object({
   id: z.number(),
   title: z.string(),
   description: z.string(),
-  startDate: z.preprocess(
-    (val) => (val ? new Date(val as string) : null),
-    z.date().nullable()
-  ),
-  endDate: z.preprocess(
-    (val) => (val ? new Date(val as string) : null),
-    z.date().nullable()
-  ),
+  start_date: z.string().nullable(),
+  end_date: z.string().nullable(),
   recipients: z.string().array().optional(),
   questions: z
     .array(
@@ -34,10 +28,10 @@ const FormSchema = z.object({
             id: z.number().optional(),
             name: z.string(),
             position: z.number(),
-          })
+          }),
         ),
         position: z.number(),
-      })
+      }),
     )
     .optional(),
 });
@@ -60,7 +54,7 @@ export type State = {
 
 export async function createSurvey(
   prevState: State,
-  formData: FormData
+  formData: FormData,
 ): Promise<State> {
   const raw = formData.get("survey") as string;
   const survey: SurveyField = JSON.parse(raw);
@@ -82,9 +76,14 @@ export async function createSurvey(
           message: "Unauthorized. Please log in.",
         };
       }
+
+      const { start_date, end_date } = validatedFields.data;
       const result = await sql`
     INSERT INTO surveys (title, description, start_date, end_date, created_by)
-    VALUES (${survey.title}, ${survey.description}, ${survey.start_date}, ${survey.end_date}, ${user.id})
+    VALUES (${survey.title}, ${survey.description}, 
+            ${survey.start_date ? sql`TO_TIMESTAMP(${start_date}, 'YYYY-MM-DD"T"HH24:MI:SS"Z"')` : null},
+            ${survey.end_date ? sql`TO_TIMESTAMP(${end_date}, 'YYYY-MM-DD"T"HH24:MI:SS"Z"')` : null},
+            ${user.id})
     RETURNING id
   `;
       const surveyId = result[0].id;
@@ -107,7 +106,7 @@ export async function createSurvey(
 
 export async function createSurveyQuestions(
   surveyId: string,
-  questions: QuestionField[]
+  questions: QuestionField[],
 ) {
   try {
     for (const question of questions) {
@@ -136,7 +135,7 @@ export async function createSurveyQuestions(
 
 export async function createSurveysUsers(
   surveyId: string,
-  recipients: string[]
+  recipients: string[],
 ) {
   try {
     for (const recipient of recipients) {
@@ -164,12 +163,13 @@ export async function updateSurvey(prevState: State, formData: FormData) {
   }
 
   try {
+    const { end_date } = validatedFields.data;
     await sql`
     UPDATE surveys
     SET
       title = ${survey.title},
       description = ${survey.description},
-      end_date = ${survey.end_date}
+      end_date = ${end_date}
     WHERE id = ${survey.id}
   `;
   } catch (error) {
@@ -185,7 +185,7 @@ export async function updateSurvey(prevState: State, formData: FormData) {
 
 export async function updateSurveyDetails(
   prevState: State,
-  formData: FormData
+  formData: FormData,
 ) {
   const raw = formData.get("survey") as string;
   const survey: SurveyField = JSON.parse(raw);
@@ -199,13 +199,14 @@ export async function updateSurveyDetails(
   }
 
   try {
+    const { start_date, end_date } = validatedFields.data;
     await sql`
     UPDATE surveys
     SET
       title = ${survey.title},
       description = ${survey.description},
-      start_date = ${survey.start_date},
-      end_date = ${survey.end_date}
+      start_date = TO_TIMESTAMP(${start_date}, 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+      end_date = TO_TIMESTAMP(${end_date}, 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
     WHERE id = ${survey.id}
   `;
 
@@ -241,7 +242,7 @@ export async function deleteSurvey(id: string) {
 
 export async function authenticate(
   prevState: string | undefined,
-  formData: FormData
+  formData: FormData,
 ) {
   try {
     await signIn("credentials", formData);
