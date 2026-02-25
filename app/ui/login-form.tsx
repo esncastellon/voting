@@ -9,7 +9,7 @@ import {
 import { ArrowRightIcon } from "@heroicons/react/20/solid";
 import { Button } from "./button";
 import { useActionState } from "react";
-import { authenticate } from "@/app/lib/survey/actions";
+import { authenticate } from "@/app/lib/login/actions";
 import { useSearchParams } from "next/navigation";
 
 export default function LoginForm() {
@@ -17,7 +17,7 @@ export default function LoginForm() {
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
   const [errorMessage, formAction, isPending] = useActionState(
     authenticate,
-    undefined
+    undefined,
   );
   return (
     <form action={formAction} className="space-y-3">
@@ -75,10 +75,10 @@ export default function LoginForm() {
           aria-live="polite"
           aria-atomic="true"
         >
-          {errorMessage && (
+          {errorMessage?.message && (
             <>
               <ExclamationCircleIcon className="h-5 w-5 text-red-500" />
-              <p className="text-sm text-red-500">{errorMessage}</p>
+              <p className="text-sm text-red-500">{errorMessage.message}</p>
             </>
           )}
         </div>
