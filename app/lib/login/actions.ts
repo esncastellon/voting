@@ -1,4 +1,4 @@
-"use-server";
+"use server";
 
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
@@ -13,13 +13,13 @@ const FormSchema = z.object({
     .trim(),
   password: z
     .string()
-    .min(8, { error: "Be at least 8 characters long" })
+    .min(4, { error: "Be at least 4 characters long" })
     .trim(),
 });
 
 export async function authenticate(
   state: FormState,
-  formData: FormData
+  formData: FormData,
 ): Promise<FormState> {
   try {
     const validatedFields = FormSchema.safeParse({
