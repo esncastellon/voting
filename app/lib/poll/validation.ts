@@ -4,9 +4,33 @@ const StatusSchema = z.enum(["draft", "open", "closed"]);
 
 const OptionSchema = z.object({
   id: z.string().uuid().optional(),
-  label: z.string().trim().min(1, "La opcion no puede estar vacia."),
+  label: z.string().trim(),
   position: z.coerce.number().int().min(0),
 });
+
+const StartsAtSchema = z
+  .string()
+  .nullable()
+  .optional()
+  .default(null)
+  .refine(
+    (value) => value === null || !Number.isNaN(new Date(value).getTime()),
+    {
+      message: "La fecha de inicio no es valida.",
+    },
+  );
+
+const EndsAtSchema = z
+  .string()
+  .nullable()
+  .optional()
+  .default(null)
+  .refine(
+    (value) => value === null || !Number.isNaN(new Date(value).getTime()),
+    {
+      message: "La fecha de cierre no es valida.",
+    },
+  );
 
 export const PollInputSchema = z
   .object({
@@ -15,8 +39,8 @@ export const PollInputSchema = z
     description: z.string().trim().optional().default(""),
     question: z.string().trim().min(1, "La pregunta es obligatoria."),
     status: StatusSchema,
-    starts_at: z.string().nullable().optional().default(null),
-    ends_at: z.string().nullable().optional().default(null),
+    starts_at: StartsAtSchema,
+    ends_at: EndsAtSchema,
     options: z
       .array(OptionSchema)
       .transform((options) =>
