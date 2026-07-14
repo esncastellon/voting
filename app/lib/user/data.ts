@@ -45,9 +45,9 @@ export async function fetchRoles() {
 
 const ITEMS_PER_PAGE = 6;
 
-export async function fetchFilteredCustomers(
+export async function fetchFilteredUsers(
   query: string,
-  currentPage: number
+  currentPage: number,
 ) {
   try {
     const offset = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -68,18 +68,14 @@ export async function fetchFilteredCustomers(
     LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
 	  `;
 
-    const customers = data.map((customer) => ({
-      ...customer,
-    }));
-
-    return customers;
+    return data;
   } catch (err) {
     console.error("Database Error:", err);
-    throw new Error("Failed to fetch customer table.");
+    throw new Error("Failed to fetch user table.");
   }
 }
 
-export async function fetchCustomersPages(query: string) {
+export async function fetchUsersPages(query: string) {
   try {
     const data = await sql`
 		SELECT COUNT(*) 
@@ -87,15 +83,13 @@ export async function fetchCustomersPages(query: string) {
 		WHERE
 		  users.name ILIKE ${`%${query}%`} OR
         users.email ILIKE ${`%${query}%`}
-		GROUP BY users.id, users.name, users.email, users.image_url
-		ORDER BY users.name ASC
 	  `;
 
-    const totalPages = Math.ceil(Number(data[0].count) / ITEMS_PER_PAGE);
+    const totalPages = Math.ceil(Number(data[0]?.count ?? 0) / ITEMS_PER_PAGE);
     return totalPages;
   } catch (err) {
     console.error("Database Error:", err);
-    throw new Error("Failed to fetch total number of customers.");
+    throw new Error("Failed to fetch total number of users.");
   }
 }
 

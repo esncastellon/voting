@@ -1,65 +1,13 @@
-// This file contains type definitions for your data.
-// It describes the shape of the data, and what data type each property should accept.
-// For simplicity of teaching, we're manually defining these types.
-// However, these types are generated automatically if you're using an ORM such as Prisma.
+import type { RoleName } from "@/app/lib/poll/definitions";
+
 export type User = {
   id: string;
   name: string;
   email: string;
   password: string;
-};
-
-export type Customer = {
-  id: string;
-  name: string;
-  email: string;
   image_url: string;
-};
-
-export type Invoice = {
-  id: string;
-  customer_id: string;
-  amount: number;
-  date: string;
-  // In TypeScript, this is called a string union type.
-  // It means that the "status" property can only be one of the two strings: 'pending' or 'paid'.
-  status: "pending" | "paid";
-};
-
-export type Revenue = {
-  month: string;
-  revenue: number;
-};
-
-// The database returns a number for amount, but we later format it to a string with the formatCurrency function
-export type LatestPollsRaw = {
-  id: string;
-  title: string;
-  description: string;
-  created_at: string;
-  created_by: string;
-};
-
-export type InvoicesTable = {
-  id: string;
-  customer_id: string;
-  name: string;
-  email: string;
-  image_url: string;
-  date: string;
-  amount: number;
-  status: "pending" | "paid";
-};
-
-export type SurveysTable = {
-  id: string;
-  title: string;
-  description: string;
-  created_at: string;
-  created_by: string;
-  name: string;
-  image_url: string;
-  status: "pendiente" | "activa" | "cerrada";
+  role_id: string;
+  role_name: RoleName;
 };
 
 export type UsersTableType = {
@@ -67,15 +15,7 @@ export type UsersTableType = {
   name: string;
   email: string;
   image_url: string;
-  role: string;
-};
-
-export type FormattedUsersTable = {
-  id: string;
-  name: string;
-  email: string;
-  image_url: string;
-  role: string;
+  role: RoleName;
 };
 
 export type UserField = {
@@ -85,19 +25,12 @@ export type UserField = {
 
 export type RoleField = {
   id: string;
-  name: string;
+  name: RoleName;
 };
 
 export type UsersRoleField = {
   role_id: string;
-  role_name: string;
+  role_name: RoleName;
   user_id: string | null;
   user_name: string | null;
-};
-
-export type InvoiceForm = {
-  id: string;
-  customer_id: string;
-  amount: number;
-  status: "pending" | "paid";
 };

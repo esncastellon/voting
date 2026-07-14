@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import postgres from "postgres";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
+type SeedSql = typeof sql;
 
 type RoleSeed = {
   name: "admin" | "usuario" | "lector";
@@ -70,10 +71,10 @@ const polls: PollSeed[] = [
   },
 ];
 
-async function createSchema() {
-  await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+async function createSchema(database: SeedSql) {
+  await database`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
 
-  await sql`
+  await database`
     CREATE TABLE IF NOT EXISTS roles (
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
       name TEXT NOT NULL UNIQUE CHECK (name IN ('admin', 'usuario', 'lector')),
@@ -81,7 +82,7 @@ async function createSchema() {
     )
   `;
 
-  await sql`
+  await database`
     CREATE TABLE IF NOT EXISTS users (
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
       name TEXT NOT NULL,
@@ -93,7 +94,7 @@ async function createSchema() {
     )
   `;
 
-  await sql`
+  await database`
     CREATE TABLE IF NOT EXISTS polls (
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
       title TEXT NOT NULL,
@@ -108,31 +109,72 @@ async function createSchema() {
     )
   `;
 
-  await sql`
+  await database`
     CREATE TABLE IF NOT EXISTS poll_options (
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
       poll_id UUID NOT NULL REFERENCES polls(id) ON DELETE CASCADE,
       label TEXT NOT NULL,
-      position INT NOT NULL
+      position INT NOT NULL,
+      UNIQUE (poll_id, id)
     )
   `;
 
-  await sql`
+  await database`
     CREATE TABLE IF NOT EXISTS votes (
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
       poll_id UUID NOT NULL REFERENCES polls(id) ON DELETE CASCADE,
-      option_id UUID NOT NULL REFERENCES poll_options(id) ON DELETE CASCADE,
+      option_id UUID NOT NULL,
       user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       created_at TIMESTAMP DEFAULT NOW(),
+      FOREIGN KEY (poll_id, option_id) REFERENCES poll_options(poll_id, id) ON DELETE CASCADE,
       UNIQUE (poll_id, user_id)
     )
   `;
+
+  await database`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'poll_options_poll_id_id_key'
+      ) THEN
+        ALTER TABLE poll_options
+        ADD CONSTRAINT poll_options_poll_id_id_key UNIQUE (poll_id, id);
+      END IF;
+    END $$;
+  `;
+  await database`
+    DELETE FROM votes
+    WHERE NOT EXISTS (
+      SELECT 1
+      FROM poll_options
+      WHERE poll_options.poll_id = votes.poll_id
+        AND poll_options.id = votes.option_id
+    )
+  `;
+  await database`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'votes_poll_option_fkey'
+      ) THEN
+        ALTER TABLE votes
+        ADD CONSTRAINT votes_poll_option_fkey
+        FOREIGN KEY (poll_id, option_id)
+        REFERENCES poll_options(poll_id, id)
+        ON DELETE CASCADE;
+      END IF;
+    END $$;
+  `;
 }
 
-async function seedRoles() {
+async function seedRoles(database: SeedSql) {
   const insertedRoles = await Promise.all(
     roles.map(
-      (role) => sql<{ id: string; name: RoleSeed["name"] }[]>`
+      (role) => database<{ id: string; name: RoleSeed["name"] }[]>`
         INSERT INTO roles (name, description)
         VALUES (${role.name}, ${role.description})
         ON CONFLICT (name) DO UPDATE SET description = EXCLUDED.description
@@ -146,44 +188,47 @@ async function seedRoles() {
   );
 }
 
-async function ensureUserColumns(roleIds: Map<RoleSeed["name"], string>) {
+async function ensureUserColumns(
+  database: SeedSql,
+  roleIds: Map<RoleSeed["name"], string>,
+) {
   const defaultRoleId = roleIds.get("usuario");
   if (!defaultRoleId) {
     throw new Error("Default usuario role was not seeded.");
   }
 
-  await sql`
+  await database`
     ALTER TABLE users
     ADD COLUMN IF NOT EXISTS image_url TEXT
   `;
-  await sql`
+  await database`
     ALTER TABLE users
     ALTER COLUMN image_url SET DEFAULT '/users/default-avatar.svg'
   `;
-  await sql`
+  await database`
     UPDATE users
     SET image_url = '/users/default-avatar.svg'
     WHERE image_url IS NULL
   `;
-  await sql`
+  await database`
     ALTER TABLE users
     ALTER COLUMN image_url SET NOT NULL
   `;
 
-  await sql`
+  await database`
     ALTER TABLE users
     ADD COLUMN IF NOT EXISTS role_id UUID
   `;
-  await sql`
+  await database`
     UPDATE users
     SET role_id = ${defaultRoleId}
     WHERE role_id IS NULL
   `;
-  await sql`
+  await database`
     ALTER TABLE users
     ALTER COLUMN role_id SET NOT NULL
   `;
-  await sql`
+  await database`
     DO $$
     BEGIN
       IF NOT EXISTS (
@@ -199,7 +244,10 @@ async function ensureUserColumns(roleIds: Map<RoleSeed["name"], string>) {
   `;
 }
 
-async function seedUsers(roleIds: Map<RoleSeed["name"], string>) {
+async function seedUsers(
+  database: SeedSql,
+  roleIds: Map<RoleSeed["name"], string>,
+) {
   const seededUsers = [];
 
   for (const user of users) {
@@ -209,7 +257,7 @@ async function seedUsers(roleIds: Map<RoleSeed["name"], string>) {
     }
 
     const hashedPassword = await bcrypt.hash(user.password, 10);
-    const inserted = await sql<{ id: string; email: string }[]>`
+    const inserted = await database<{ id: string; email: string }[]>`
       INSERT INTO users (name, email, password, role_id, image_url)
       VALUES (${user.name}, ${user.email}, ${hashedPassword}, ${roleId}, '/users/default-avatar.svg')
       ON CONFLICT (email) DO UPDATE SET
@@ -226,18 +274,22 @@ async function seedUsers(roleIds: Map<RoleSeed["name"], string>) {
   return seededUsers;
 }
 
-async function seedPolls(adminUserId: string, voterUserId: string) {
+async function seedPolls(
+  database: SeedSql,
+  adminUserId: string,
+  voterUserId: string,
+) {
   const seededPolls = [];
 
   for (const poll of polls) {
     const existingPoll =
       (
-        await sql<{ id: string; status: PollSeed["status"] }[]>`
+        await database<{ id: string; status: PollSeed["status"] }[]>`
           SELECT id, status FROM polls WHERE title = ${poll.title} LIMIT 1
         `
       )[0] ??
       (
-        await sql<{ id: string; status: PollSeed["status"] }[]>`
+        await database<{ id: string; status: PollSeed["status"] }[]>`
           INSERT INTO polls (title, description, question, status, created_by)
           VALUES (${poll.title}, ${poll.description}, ${poll.question}, ${poll.status}, ${adminUserId})
           RETURNING id, status
@@ -248,7 +300,7 @@ async function seedPolls(adminUserId: string, voterUserId: string) {
       continue;
     }
 
-    await sql`
+    await database`
       UPDATE polls
       SET
         description = ${poll.description},
@@ -258,12 +310,12 @@ async function seedPolls(adminUserId: string, voterUserId: string) {
         updated_at = NOW()
       WHERE id = ${existingPoll.id}
     `;
-    await sql`DELETE FROM votes WHERE poll_id = ${existingPoll.id}`;
-    await sql`DELETE FROM poll_options WHERE poll_id = ${existingPoll.id}`;
+    await database`DELETE FROM votes WHERE poll_id = ${existingPoll.id}`;
+    await database`DELETE FROM poll_options WHERE poll_id = ${existingPoll.id}`;
 
     const insertedOptions = [];
     for (const [position, label] of poll.options.entries()) {
-      const option = await sql<{ id: string }[]>`
+      const option = await database<{ id: string }[]>`
         INSERT INTO poll_options (poll_id, label, position)
         VALUES (${existingPoll.id}, ${label}, ${position})
         RETURNING id
@@ -272,7 +324,7 @@ async function seedPolls(adminUserId: string, voterUserId: string) {
     }
 
     if (poll.status === "closed" && insertedOptions[0]) {
-      await sql`
+      await database`
         INSERT INTO votes (poll_id, option_id, user_id)
         VALUES (${existingPoll.id}, ${insertedOptions[0].id}, ${voterUserId})
         ON CONFLICT (poll_id, user_id) DO NOTHING
@@ -291,27 +343,39 @@ export async function GET() {
   }
 
   try {
-    await createSchema();
+    const result = await sql.begin(async (transaction) => {
+      // TransactionSql is not assignable to Sql in types; coerce to Sql-compatible
+      const tx = transaction as unknown as typeof sql;
 
-    const roleIds = await seedRoles();
-    await ensureUserColumns(roleIds);
-    const seededUsers = await seedUsers(roleIds);
-    const admin = seededUsers.find((user) => user.email === "admin@example.com");
-    const voter = seededUsers.find(
-      (user) => user.email === "usuario@example.com",
-    );
+      await createSchema(tx);
 
-    if (!admin || !voter) {
-      throw new Error("Demo users were not seeded.");
-    }
+      const roleIds = await seedRoles(tx);
+      await ensureUserColumns(tx, roleIds);
+      const seededUsers = await seedUsers(tx, roleIds);
+      const admin = seededUsers.find(
+        (user) => user.email === "admin@example.com",
+      );
+      const voter = seededUsers.find(
+        (user) => user.email === "usuario@example.com",
+      );
 
-    const seededPolls = await seedPolls(admin.id, voter.id);
+      if (!admin || !voter) {
+        throw new Error("Demo users were not seeded.");
+      }
+
+      const seededPolls = await seedPolls(tx, admin.id, voter.id);
+
+      return {
+        seededUsers,
+        seededPolls,
+      };
+    });
 
     return Response.json({
       message: "Database seeded successfully",
       roles: roles.length,
-      users: seededUsers.length,
-      polls: seededPolls.length,
+      users: result.seededUsers.length,
+      polls: result.seededPolls.length,
     });
   } catch (error) {
     return Response.json({ error }, { status: 500 });

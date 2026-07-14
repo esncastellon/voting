@@ -4,32 +4,25 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import postgres from "postgres";
+import { hashPassword } from "./password";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
-const FormSchema = z.object({
-  id: z.string(),
-  name: z.string({
-    error: "Please type a name.",
-  }),
-  email: z.string({
-    error: "Please type an email.",
-  }),
-  roleId: z.string({
-    error: "Please select a role.",
-  }),
-  password: z.string(),
+const CreateUser = z.object({
+  name: z.string().trim().min(1, "El nombre es obligatorio."),
+  email: z.email("El email no es válido.").trim(),
+  roleId: z.uuid("Selecciona un rol."),
+  password: z
+    .string()
+    .min(6, "La contraseña debe tener al menos 6 caracteres."),
 });
-
-const CreateUser = FormSchema.omit({ id: true, password: true });
-
-const UpdateUser = FormSchema.omit({ id: true, password: true });
 
 export type State = {
   errors?: {
     name?: string[];
     email?: string[];
     roleId?: string[];
+    password?: string[];
   };
   message?: string | null;
 };
@@ -39,29 +32,29 @@ export async function createUser(prevState: State, formData: FormData) {
     name: formData.get("name"),
     email: formData.get("email"),
     roleId: formData.get("roleId"),
+    password: formData.get("password"),
   });
 
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
-      message: "Missing Fields. Failed to Create User.",
+      message: "Faltan campos. No se pudo crear el usuario.",
     };
   }
 
-  const { name, email, roleId } = validatedFields.data;
-
-  const password = Math.random().toString(36).slice(-8); // Generate a simple random password
-  const image_url = "/users/evil-rabbit.png"; // Default image URL
+  const { name, email, roleId, password } = validatedFields.data;
+  const hashedPassword = await hashPassword(password);
+  const imageUrl = "/users/default-avatar.svg";
 
   try {
     await sql`
     INSERT INTO users (name, email, role_id, password, image_url)
-    VALUES (${name}, ${email}, ${roleId}, ${password}, ${image_url})
+    VALUES (${name}, ${email}, ${roleId}, ${hashedPassword}, ${imageUrl})
   `;
   } catch (error) {
     console.error(error);
     return {
-      message: "Database Error: Failed to Create User.",
+      message: "Error de base de datos: no se pudo crear el usuario.",
     };
   }
 
