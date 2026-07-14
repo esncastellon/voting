@@ -286,7 +286,7 @@ async function seedPolls(adminUserId: string, voterUserId: string) {
 }
 
 export async function GET() {
-  if (process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV !== "development") {
     return Response.json({ message: "No encontrado" }, { status: 404 });
   }
 
